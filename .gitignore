@@ -1,0 +1,4 @@
+/public/uploads/*
+!/public/uploads/.gitkeep
+/.env
+/fix_pass.sql

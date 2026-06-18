@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: clinica_app
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASS=secret_clinica_db_pass
+      - DB_NAME=clinica_db
+      - BASE_URL=http://localhost:8080 # Altere isso para o domínio em produção (ex: https://meusistema.com)
+    volumes:
+      - app_uploads:/var/www/html/public/uploads
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: clinica_db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret_clinica_db_pass
+      - MYSQL_DATABASE=clinica_db
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  app_uploads:
+  db_data:

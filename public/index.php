@@ -1,0 +1,78 @@
+<?php
+// public/index.php
+
+// Inicia sessão
+session_start();
+
+// Configurações e requires base (substituindo composer autoload por algo simples)
+require_once __DIR__ . '/../config/database.php';
+
+// Autoloader simples
+spl_autoload_register(function ($class) {
+    $file = __DIR__ . '/../src/' . str_replace('\\', '/', $class) . '.php';
+    if (file_exists($file)) {
+        require_once $file;
+    }
+});
+
+// Instancia Roteador
+$router = new \Core\Router();
+
+// ---- ROTAS DA APLICAÇÃO ----
+// Login
+$router->add('GET', '/', 'AuthController@index');
+$router->add('GET', '/login', 'AuthController@index');
+$router->add('POST', '/login', 'AuthController@login');
+$router->add('GET', '/logout', 'AuthController@logout');
+
+// Dashboard Admin/Func
+$router->add('GET', '/admin/dashboard', 'DashboardController@index');
+
+// Pacientes
+$router->add('GET', '/admin/patients', 'PatientController@index');
+$router->add('GET', '/admin/patients/create', 'PatientController@create');
+$router->add('POST', '/admin/patients/store', 'PatientController@store');
+
+// Empresas
+$router->add('GET', '/admin/companies', 'CompanyController@index');
+$router->add('GET', '/admin/companies/create', 'CompanyController@create');
+$router->add('POST', '/admin/companies/store', 'CompanyController@store');
+
+// Exames
+$router->add('GET', '/admin/exams', 'ExamController@index');
+$router->add('GET', '/admin/exams/create', 'ExamController@create');
+$router->add('POST', '/admin/exams/store', 'ExamController@store');
+$router->add('GET', '/admin/exams/makeAvailable', 'ExamController@makeAvailable');
+$router->add('GET', '/admin/exams/sendWaha', 'ExamController@sendWaha');
+
+// Portais
+$router->add('GET', '/patient/dashboard', 'PortalController@patient');
+$router->add('GET', '/company/dashboard', 'PortalController@company');
+
+// Logs (Apenas Admin)
+$router->add('GET', '/admin/logs', 'LogController@index');
+
+// Painel WAHA
+$router->add('GET', '/admin/waha', 'WahaController@index');
+$router->add('POST', '/admin/waha/store', 'WahaController@store');
+
+// Dispatch!
+// Pega o caminho relativo à pasta onde o script está rodando
+$basePath = dirname($_SERVER['SCRIPT_NAME']);
+$requestUri = $_SERVER['REQUEST_URI'];
+
+// Remove query strings da URI
+if (($pos = strpos($requestUri, '?')) !== false) {
+    $requestUri = substr($requestUri, 0, $pos);
+}
+
+// Remove o basePath se o sistema não estiver na raiz de um subdomínio
+if (strpos($requestUri, $basePath) === 0 && $basePath !== '/') {
+    $requestUri = substr($requestUri, strlen($basePath));
+}
+
+$requestUri = '/' . ltrim($requestUri, '/');
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+$router->dispatch($requestUri, $method);
