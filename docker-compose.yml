@@ -1,6 +1,14 @@
 version: '3.8'
 
 services:
+  # Container inicial que baixa o código do Github direto pro volume do Docker
+  git-sync:
+    image: alpine/git
+    entrypoint: /bin/sh
+    command: -c "if [ -d /app/.git ]; then cd /app && git fetch --all && git reset --hard origin/main; else git clone https://github.com/tvagenciariver/clinica-medwork.git /app; fi; mkdir -p /app/public/uploads; chmod -R 777 /app/public/uploads"
+    volumes:
+      - app_code:/app
+
   app:
     image: webdevops/php-apache:8.2
     ports:
@@ -13,8 +21,9 @@ services:
       - DB_NAME=clinica_db
       - BASE_URL=http://localhost:8080 # Altere em produção
     volumes:
-      - ./:/app
+      - app_code:/app
     depends_on:
+      - git-sync
       - db
 
   db:
@@ -24,7 +33,9 @@ services:
       - MYSQL_DATABASE=clinica_db
     volumes:
       - db_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - app_code:/app_init # O DB precisa ler o init.sql do código
+    command: --init-file="/app_init/init.sql"
 
 volumes:
+  app_code:
   db_data:
