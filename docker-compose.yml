@@ -19,7 +19,6 @@ services:
       - DB_USER=root
       - DB_PASS=secret_clinica_db_pass
       - DB_NAME=clinica_db
-      - BASE_URL=http://localhost:8080 # Altere em produção
     volumes:
       - app_code:/app
     depends_on:
