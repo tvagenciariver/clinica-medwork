@@ -26,7 +26,7 @@ services:
       - db
 
   db:
-    image: mysql:8.0
+    image: mariadb:10.5
     environment:
       - MYSQL_ROOT_PASSWORD=secret_clinica_db_pass
       - MYSQL_DATABASE=clinica_db
@@ -34,7 +34,7 @@ services:
       - db_data:/var/lib/mysql
 
   db-init:
-    image: mysql:8.0
+    image: mariadb:10.5
     command: sh -c "while ! mysqladmin ping -h db -u root -psecret_clinica_db_pass --silent; do sleep 2; done; while [ ! -f /app/init.sql ]; do sleep 1; done; mysql -h db -u root -psecret_clinica_db_pass clinica_db < /app/init.sql"
     volumes:
       - app_code:/app
