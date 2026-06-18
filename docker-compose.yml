@@ -32,8 +32,14 @@ services:
       - MYSQL_DATABASE=clinica_db
     volumes:
       - db_data:/var/lib/mysql
-      - app_code:/app_init # O DB precisa ler o init.sql do código
-    command: --init-file="/app_init/init.sql"
+
+  db-init:
+    image: mysql:8.0
+    command: sh -c "while ! mysqladmin ping -h db -u root -psecret_clinica_db_pass --silent; do sleep 2; done; while [ ! -f /app/init.sql ]; do sleep 1; done; mysql -h db -u root -psecret_clinica_db_pass clinica_db < /app/init.sql"
+    volumes:
+      - app_code:/app
+    depends_on:
+      - db
 
 volumes:
   app_code:
