@@ -85,8 +85,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Arquivo do Exame (PDF ou Imagem)</label>
-                        <input type="file" name="exam_file" class="form-control" accept=".pdf,image/*">
+                        <label class="form-label">Arquivo(s) do Exame (PDF ou Imagens) <small style="color: #64748b; font-weight: normal;">Pode selecionar vários de uma vez.</small></label>
+                        <input type="file" name="exam_files[]" class="form-control" accept=".pdf,image/*" multiple>
                     </div>
 
                     <div class="form-group">

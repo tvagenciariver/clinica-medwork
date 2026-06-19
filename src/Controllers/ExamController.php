@@ -106,19 +106,29 @@ class ExamController extends Controller {
             // Gerar protocolo unico
             $protocol_code = date('YmdHi') . rand(1000, 9999);
             
-            // Tratamento de Upload Simples
-            $file_path = null;
-            if (isset($_FILES['exam_file']) && $_FILES['exam_file']['error'] === UPLOAD_ERR_OK) {
+            // Tratamento de Upload Múltiplo
+            $file_paths = [];
+            if (isset($_FILES['exam_files']) && is_array($_FILES['exam_files']['name'])) {
                 $uploadDir = __DIR__ . '/../../public/uploads/';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0777, true);
                 }
-                $ext = pathinfo($_FILES['exam_file']['name'], PATHINFO_EXTENSION);
-                $fileName = $protocol_code . '.' . $ext;
-                if (move_uploaded_file($_FILES['exam_file']['tmp_name'], $uploadDir . $fileName)) {
-                    $file_path = 'uploads/' . $fileName;
+                
+                $count = count($_FILES['exam_files']['name']);
+                for ($i = 0; $i < $count; $i++) {
+                    if ($_FILES['exam_files']['error'][$i] === UPLOAD_ERR_OK) {
+                        $ext = pathinfo($_FILES['exam_files']['name'][$i], PATHINFO_EXTENSION);
+                        // Append index to avoid overwriting files with same protocol
+                        $fileName = $protocol_code . '_' . ($i + 1) . '.' . $ext;
+                        if (move_uploaded_file($_FILES['exam_files']['tmp_name'][$i], $uploadDir . $fileName)) {
+                            $file_paths[] = 'uploads/' . $fileName;
+                        }
+                    }
                 }
             }
+
+            // Encode paths to JSON. If empty, null.
+            $file_path = !empty($file_paths) ? json_encode($file_paths) : null;
 
             try {
                 $stmt = $db->prepare("

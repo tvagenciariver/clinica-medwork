@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS exams (
     exam_type VARCHAR(100) NOT NULL,
     exam_date DATE NOT NULL,
     responsible_doctor VARCHAR(100),
-    file_path VARCHAR(255),
+    file_path TEXT,
     observations TEXT,
     status ENUM('registered', 'processing', 'available', 'sent_whatsapp', 'viewed_patient', 'viewed_company') DEFAULT 'registered',
     available_at TIMESTAMP NULL,

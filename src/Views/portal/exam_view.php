@@ -32,18 +32,45 @@
     </div>
     <div style="display: flex; gap: 1rem;">
         <a href="javascript:history.back()" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
-        <a href="<?= BASE_URL ?>/<?= htmlspecialchars($exam['file_path']) ?>" download class="btn btn-primary"><i class="fa-solid fa-download"></i> Baixar Arquivo Original</a>
     </div>
 </header>
 
-<main class="viewer-container">
+<main class="viewer-container" style="display: flex; flex-direction: column; gap: 2rem; align-items: center; padding: 2rem 1rem;">
     <?php
-    $ext = strtolower(pathinfo($exam['file_path'], PATHINFO_EXTENSION));
-    if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])):
+    $paths = [];
+    if (!empty($exam['file_path'])) {
+        $decoded = json_decode($exam['file_path'], true);
+        if (is_array($decoded)) {
+            $paths = $decoded;
+        } else {
+            $paths = [$exam['file_path']]; // Compatibilidade com exames antigos (string simples)
+        }
+    }
+
+    foreach ($paths as $index => $path):
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
     ?>
-        <img src="<?= BASE_URL ?>/<?= htmlspecialchars($exam['file_path']) ?>" style="max-width: 100%; height: auto; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border-radius: 8px; margin: auto;">
-    <?php else: ?>
-        <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($exam['file_path']) ?>" class="file-frame"></iframe>
+        <div style="width: 100%; max-width: 1200px; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+            <div style="width: 100%; display: flex; justify-content: flex-end;">
+                <a href="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" download class="btn btn-primary btn-sm"><i class="fa-solid fa-download"></i> Baixar Arquivo <?= count($paths) > 1 ? ($index + 1) : '' ?></a>
+            </div>
+            
+            <?php if ($isImage): ?>
+                <img src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="max-width: 100%; height: auto; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border-radius: 8px;">
+            <?php else: ?>
+                <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" class="file-frame"></iframe>
+            <?php endif; ?>
+        </div>
+        
+        <?php if ($index < count($paths) - 1): ?>
+            <hr style="width: 100%; border: none; border-top: 2px dashed #cbd5e1; margin: 1rem 0;">
+        <?php endif; ?>
+        
+    <?php endforeach; ?>
+
+    <?php if (empty($paths)): ?>
+        <p>Nenhum arquivo anexado a este exame.</p>
     <?php endif; ?>
 </main>
 
