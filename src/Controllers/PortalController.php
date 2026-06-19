@@ -31,18 +31,59 @@ class PortalController extends Controller {
         
         $db = Database::getInstance();
         
-        // Exames dos funcionários atrelados a esta empresa
-        $exams = $db->query("
+        // Filtros de busca
+        $search = trim($_GET['search'] ?? '');
+        $date_start = $_GET['date_start'] ?? '';
+        $date_end = $_GET['date_end'] ?? '';
+        $exam_type = trim($_GET['exam_type'] ?? '');
+        
+        $where = ["e.company_id = $company_id", "e.origin = 'company'", "e.status IN ('available', 'sent_whatsapp', 'viewed_patient', 'viewed_company')"];
+        $params = [];
+        
+        if (!empty($search)) {
+            $where[] = "(p.full_name LIKE :search OR p.cpf LIKE :search)";
+            $search_clean = preg_replace('/[^0-9]/', '', $search);
+            $params['search'] = "%{$search}%";
+            if (!empty($search_clean)) {
+                $where[count($where)-1] = "(p.full_name LIKE :search OR p.cpf LIKE :search OR p.cpf LIKE :search_clean)";
+                $params['search_clean'] = "%{$search_clean}%";
+            }
+        }
+        
+        if (!empty($date_start)) {
+            $where[] = "e.exam_date >= :date_start";
+            $params['date_start'] = $date_start;
+        }
+        
+        if (!empty($date_end)) {
+            $where[] = "e.exam_date <= :date_end";
+            $params['date_end'] = $date_end;
+        }
+        
+        if (!empty($exam_type)) {
+            $where[] = "e.exam_type LIKE :exam_type";
+            $params['exam_type'] = "%{$exam_type}%";
+        }
+
+        $whereSql = implode(" AND ", $where);
+
+        $stmt = $db->prepare("
             SELECT e.*, p.full_name as patient_name, p.cpf
             FROM exams e 
             JOIN patients p ON e.patient_id = p.id
-            WHERE e.company_id = $company_id 
-            AND e.origin = 'company'
-            AND e.status IN ('available', 'sent_whatsapp', 'viewed_patient', 'viewed_company')
+            WHERE $whereSql
             ORDER BY e.exam_date DESC
-        ")->fetchAll();
+        ");
+        $stmt->execute($params);
+        $exams = $stmt->fetchAll();
         
-        $this->view('company/dashboard', ['exams' => $exams]);
+        $this->view('company/dashboard', [
+            'exams' => $exams,
+            'search' => $search,
+            'date_start' => $date_start,
+            'date_end' => $date_end,
+            'exam_type' => $exam_type
+        ]);
     }
 
     public function viewExam($id) {

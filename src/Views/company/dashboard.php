@@ -29,6 +29,33 @@
 <main class="container" style="margin-top: 2rem;">
     <h1 style="margin-bottom: 1.5rem;">Exames dos Colaboradores</h1>
 
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <form method="GET" action="<?= BASE_URL ?>/company/dashboard" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+            <div class="form-group" style="flex: 2; margin: 0; min-width: 250px;">
+                <label class="form-label">Buscar Colaborador (Nome/CPF)</label>
+                <input type="text" name="search" class="form-control" value="<?= htmlspecialchars($search ?? '') ?>" placeholder="Digite sua busca...">
+            </div>
+            <div class="form-group" style="flex: 1; margin: 0; min-width: 150px;">
+                <label class="form-label">Data Início</label>
+                <input type="date" name="date_start" class="form-control" value="<?= htmlspecialchars($date_start ?? '') ?>">
+            </div>
+            <div class="form-group" style="flex: 1; margin: 0; min-width: 150px;">
+                <label class="form-label">Data Fim</label>
+                <input type="date" name="date_end" class="form-control" value="<?= htmlspecialchars($date_end ?? '') ?>">
+            </div>
+            <div class="form-group" style="flex: 1; margin: 0; min-width: 150px;">
+                <label class="form-label">Tipo de Exame</label>
+                <input type="text" name="exam_type" class="form-control" value="<?= htmlspecialchars($exam_type ?? '') ?>" placeholder="Ex: Audiometria">
+            </div>
+            <div style="margin-bottom: 0.25rem;">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                <?php if(!empty($search) || !empty($date_start) || !empty($date_end) || !empty($exam_type)): ?>
+                    <a href="<?= BASE_URL ?>/company/dashboard" class="btn btn-secondary">Limpar</a>
+                <?php endif; ?>
+            </div>
+        </form>
+    </div>
+
     <div class="card">
         <div class="table-container">
             <table class="table">
