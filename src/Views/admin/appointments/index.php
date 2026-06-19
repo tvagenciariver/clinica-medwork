@@ -1,10 +1,23 @@
-<?php include __DIR__ . '/../../shared/header.php'; ?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Agenda de Procedimentos - MedWork</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+</head>
+<body>
 
 <div class="app-layout">
     <?php include __DIR__ . '/../../shared/sidebar.php'; ?>
 
     <main class="main-content">
-        <?php include __DIR__ . '/../../shared/topbar.php'; ?>
+        <header class="topbar">
+            <div></div>
+            <div class="user-profile flex items-center gap-2">
+                <span style="font-weight: 500;"><?= htmlspecialchars($_SESSION['name']) ?></span>
+            </div>
+        </header>
 
         <div class="content-area">
             <?php if(isset($msg)): ?>
@@ -154,4 +167,5 @@ async function startWahaQueue() {
 }
 </script>
 
-<?php include __DIR__ . '/../../shared/footer.php'; ?>
+</body>
+</html>
