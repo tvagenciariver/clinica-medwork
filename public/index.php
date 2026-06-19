@@ -88,7 +88,8 @@ $router->add('GET', '/admin/appointments/create', 'AppointmentController@create'
 $router->add('POST', '/admin/appointments/store', 'AppointmentController@store');
 $router->add('GET', '/admin/appointments/edit/{id}', 'AppointmentController@edit');
 $router->add('POST', '/admin/appointments/update/{id}', 'AppointmentController@update');
-$router->add('GET', '/admin/appointments/sendConfirmations', 'AppointmentController@sendConfirmations');
+$router->add('GET', '/admin/appointments/getTomorrowIds', 'AppointmentController@getTomorrowIds');
+$router->add('POST', '/admin/appointments/sendSingle', 'AppointmentController@sendSingle');
 
 // Webhook WAHA
 $router->add('POST', '/webhook/waha', 'WebhookController@wahaReceiver');

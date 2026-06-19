@@ -143,12 +143,10 @@ class AppointmentController extends Controller {
         }
     }
 
-    public function sendConfirmations() {
+    public function getTomorrowIds() {
         $this->authRequired(['admin']);
         
         $db = Database::getInstance();
-        
-        // Selecionar todos os agendamentos de amanhã que estão com status 'agendado' e o paciente tem WhatsApp
         $tomorrow = date('Y-m-d', strtotime('+1 day'));
         
         $stmt = $db->prepare("
@@ -160,30 +158,36 @@ class AppointmentController extends Controller {
         $stmt->execute(['date' => $tomorrow]);
         $appointments = $stmt->fetchAll();
         
-        $successCount = 0;
-        $errorCount = 0;
-        
+        $validIds = [];
         foreach ($appointments as $appt) {
             if ($appt['has_whatsapp']) {
-                $result = WahaApiService::sendAppointmentConfirmation($appt['id']);
-                if ($result['status'] === 'success') {
-                    $successCount++;
-                } else {
-                    $errorCount++;
-                }
-            } else {
-                $errorCount++;
+                $validIds[] = $appt['id'];
             }
         }
         
-        if ($successCount > 0) {
-            $_SESSION['msg'] = "$successCount mensagens de confirmação enviadas. " . ($errorCount > 0 ? "($errorCount falhas ou sem WhatsApp)" : "");
-            $_SESSION['msg_type'] = 'success';
-        } else {
-            $_SESSION['msg'] = "Nenhuma mensagem enviada. Verifique se há agendamentos para amanhã com WhatsApp.";
-            $_SESSION['msg_type'] = 'warning';
-        }
+        header('Content-Type: application/json');
+        echo json_encode(['ids' => $validIds]);
+        exit;
+    }
+
+    public function sendSingle() {
+        $this->authRequired(['admin']);
         
-        $this->redirect('/admin/appointments');
+        if ($this->isPost()) {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $id = $data['id'] ?? null;
+            
+            if (!$id) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'ID não fornecido']);
+                exit;
+            }
+            
+            $result = WahaApiService::sendAppointmentConfirmation($id);
+            
+            header('Content-Type: application/json');
+            echo json_encode($result);
+            exit;
+        }
     }
 }

@@ -16,11 +16,14 @@
             <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h1 class="page-title"><i class="fa-solid fa-calendar-check" style="color: var(--primary); margin-right: 0.5rem;"></i> Agenda de Procedimentos</h1>
                 
-                <div style="display: flex; gap: 1rem;">
-                    <a href="<?= BASE_URL ?>/admin/appointments/sendConfirmations" class="btn" style="background: #25D366; color: white;" onclick="return confirm('Isso enviará uma mensagem no WhatsApp para TODOS os pacientes com agendamento para AMANHÃ que ainda não confirmaram. Deseja continuar?');">
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button type="button" id="btn-disparar" class="btn" style="background: #25D366; color: white;" onclick="startWahaQueue()">
                         <i class="fa-brands fa-whatsapp"></i> Disparar Confirmações (Amanhã)
-                    </a>
-                    <a href="<?= BASE_URL ?>/admin/appointments/create" class="btn btn-primary">
+                    </button>
+                    <span id="queue-status" style="display: none; font-weight: bold; color: var(--text-muted);">
+                        <i class="fa-solid fa-spinner fa-spin"></i> <span id="queue-text">Iniciando...</span>
+                    </span>
+                    <a href="<?= BASE_URL ?>/admin/appointments/create" class="btn btn-primary" id="btn-novo">
                         <i class="fa-solid fa-plus"></i> Novo Agendamento
                     </a>
                 </div>
@@ -89,5 +92,66 @@
         </div>
     </main>
 </div>
+
+<script>
+async function startWahaQueue() {
+    if(!confirm('Isso enviará uma mensagem no WhatsApp para TODOS os pacientes com agendamento para AMANHÃ que ainda não confirmaram. Será feito de forma cadenciada para evitar bloqueios. Deseja continuar?')) {
+        return;
+    }
+
+    const btn = document.getElementById('btn-disparar');
+    const statusBox = document.getElementById('queue-status');
+    const statusText = document.getElementById('queue-text');
+    const btnNovo = document.getElementById('btn-novo');
+
+    btn.style.display = 'none';
+    btnNovo.style.display = 'none';
+    statusBox.style.display = 'inline-block';
+
+    try {
+        statusText.innerText = "Buscando pacientes agendados...";
+        let res = await fetch('<?= BASE_URL ?>/admin/appointments/getTomorrowIds');
+        let data = await res.json();
+        
+        let ids = data.ids || [];
+        if(ids.length === 0) {
+            alert('Nenhum agendamento pendente para amanhã com número de WhatsApp cadastrado.');
+            location.reload();
+            return;
+        }
+
+        let sucessos = 0;
+        let erros = 0;
+
+        for (let i = 0; i < ids.length; i++) {
+            statusText.innerText = `Enviando mensagem ${i+1} de ${ids.length}...`;
+            
+            let sendRes = await fetch('<?= BASE_URL ?>/admin/appointments/sendSingle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: ids[i] })
+            });
+            let sendData = await sendRes.json();
+            
+            if(sendData.status === 'success') sucessos++;
+            else erros++;
+
+            if(i < ids.length - 1) {
+                // Intervalo aleatório entre 4 e 9 segundos para parecer humano
+                let delay = Math.floor(Math.random() * 5000) + 4000;
+                statusText.innerText = `Aguardando ${Math.round(delay/1000)}s (proteção anti-spam)...`;
+                await new Promise(r => setTimeout(r, delay));
+            }
+        }
+
+        alert(`Concluído! ${sucessos} mensagens enviadas. ${erros > 0 ? erros + ' falhas.' : ''}`);
+        location.reload();
+        
+    } catch(e) {
+        alert('Ocorreu um erro no disparo em lote. Tente novamente.');
+        location.reload();
+    }
+}
+</script>
 
 <?php include __DIR__ . '/../../shared/footer.php'; ?>
