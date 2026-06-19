@@ -9,14 +9,32 @@ class PatientController extends Controller {
         $this->authRequired(['admin', 'employee']);
         
         $db = Database::getInstance();
-        $patients = $db->query("
+        
+        $search = trim($_GET['search'] ?? '');
+        $where = '';
+        $params = [];
+        
+        if (!empty($search)) {
+            $where = "WHERE p.full_name LIKE :search OR p.cpf LIKE :search";
+            $search_clean = preg_replace('/[^0-9]/', '', $search); // try numeric for cpf
+            $params['search'] = "%{$search}%";
+            if (!empty($search_clean)) {
+                $where .= " OR p.cpf LIKE :search_clean";
+                $params['search_clean'] = "%{$search_clean}%";
+            }
+        }
+        
+        $stmt = $db->prepare("
             SELECT p.*, c.trade_name as company_name 
             FROM patients p 
             LEFT JOIN companies c ON p.default_company_id = c.id 
+            $where
             ORDER BY p.full_name ASC
-        ")->fetchAll();
+        ");
+        $stmt->execute($params);
+        $patients = $stmt->fetchAll();
         
-        $this->view('admin/patients/index', ['patients' => $patients]);
+        $this->view('admin/patients/index', ['patients' => $patients, 'search' => $search]);
     }
 
     public function create() {

@@ -9,12 +9,29 @@ class CompanyController extends Controller {
         $this->authRequired(['admin', 'employee']);
         
         $db = Database::getInstance();
-        $companies = $db->query("SELECT * FROM companies ORDER BY trade_name ASC")->fetchAll();
+        
+        $search = trim($_GET['search'] ?? '');
+        $where = '';
+        $params = [];
+        
+        if (!empty($search)) {
+            $where = "WHERE corporate_name LIKE :search OR trade_name LIKE :search OR cnpj LIKE :search";
+            $search_clean = preg_replace('/[^0-9]/', '', $search); // numeric fallback for cnpj
+            $params['search'] = "%{$search}%";
+            if (!empty($search_clean)) {
+                $where .= " OR cnpj LIKE :search_clean";
+                $params['search_clean'] = "%{$search_clean}%";
+            }
+        }
+        
+        $stmt = $db->prepare("SELECT * FROM companies $where ORDER BY trade_name ASC, corporate_name ASC");
+        $stmt->execute($params);
+        $companies = $stmt->fetchAll();
         
         $msg = $_SESSION['msg'] ?? null;
         unset($_SESSION['msg']);
 
-        $this->view('admin/companies/index', ['companies' => $companies, 'msg' => $msg]);
+        $this->view('admin/companies/index', ['companies' => $companies, 'msg' => $msg, 'search' => $search]);
     }
 
     public function create() {

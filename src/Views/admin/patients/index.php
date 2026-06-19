@@ -24,6 +24,21 @@
                 <h1 class="page-title">Pacientes</h1>
                 <a href="<?= BASE_URL ?>/admin/patients/create" class="btn btn-primary"><i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Novo Paciente</a>
             </div>
+            
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <form method="GET" action="<?= BASE_URL ?>/admin/patients" style="display: flex; gap: 1rem; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1; margin: 0;">
+                        <label class="form-label">Buscar por Nome ou CPF</label>
+                        <input type="text" name="search" class="form-control" value="<?= htmlspecialchars($search ?? '') ?>" placeholder="Digite o nome ou CPF...">
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-search"></i> Buscar</button>
+                        <?php if(!empty($search)): ?>
+                            <a href="<?= BASE_URL ?>/admin/patients" class="btn btn-secondary">Limpar</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
 
             <div class="card">
                 <div class="table-container">

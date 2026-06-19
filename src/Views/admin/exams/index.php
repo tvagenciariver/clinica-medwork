@@ -21,17 +21,44 @@
 
         <div class="content-area">
             <div class="page-header">
-                <h1 class="page-title">Gerenciar Exames</h1>
-                <a href="<?= BASE_URL ?>/admin/exams/create" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Registrar Exame</a>
+                <h1 class="page-title">Exames e ASOs</h1>
+                <a href="<?= BASE_URL ?>/admin/exams/create" class="btn btn-primary"><i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Novo Exame</a>
             </div>
 
-            <?php if(!empty($msg)): ?>
-                <div class="alert <?= ($_SESSION['msg_type'] ?? 'success') === 'error' ? 'alert-danger' : 'alert-success' ?>" style="background: <?= ($_SESSION['msg_type'] ?? 'success') === 'error' ? '#fef2f2' : '#d1fae5' ?>; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                    <?= htmlspecialchars($msg) ?>
-                </div>
-            <?php endif; ?>
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <form method="GET" action="<?= BASE_URL ?>/admin/exams" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 2; margin: 0; min-width: 250px;">
+                        <label class="form-label">Buscar Paciente (Nome/CPF)</label>
+                        <input type="text" name="search" class="form-control" value="<?= htmlspecialchars($search ?? '') ?>" placeholder="Digite sua busca...">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin: 0; min-width: 150px;">
+                        <label class="form-label">Data Início</label>
+                        <input type="date" name="date_start" class="form-control" value="<?= htmlspecialchars($date_start ?? '') ?>">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin: 0; min-width: 150px;">
+                        <label class="form-label">Data Fim</label>
+                        <input type="date" name="date_end" class="form-control" value="<?= htmlspecialchars($date_end ?? '') ?>">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin: 0; min-width: 150px;">
+                        <label class="form-label">Tipo de Exame</label>
+                        <input type="text" name="exam_type" class="form-control" value="<?= htmlspecialchars($exam_type ?? '') ?>" placeholder="Ex: Audiometria">
+                    </div>
+                    <div style="margin-bottom: 0.25rem;">
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                        <?php if(!empty($search) || !empty($date_start) || !empty($date_end) || !empty($exam_type)): ?>
+                            <a href="<?= BASE_URL ?>/admin/exams" class="btn btn-secondary">Limpar</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
 
             <div class="card">
+                <?php if(!empty($msg)): ?>
+                    <div class="alert <?= ($_SESSION['msg_type'] ?? 'success') === 'error' ? 'alert-danger' : 'alert-success' ?>" style="background: <?= ($_SESSION['msg_type'] ?? 'success') === 'error' ? '#fef2f2' : '#d1fae5' ?>; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <?= htmlspecialchars($msg) ?>
+                    </div>
+                <?php endif; ?>
+
                 <div class="table-container">
                     <table class="table">
                         <thead>

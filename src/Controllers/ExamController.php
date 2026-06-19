@@ -11,19 +11,65 @@ class ExamController extends Controller {
         $this->authRequired(['admin', 'employee']);
         
         $db = Database::getInstance();
-        $exams = $db->query("
-            SELECT e.*, p.full_name as patient_name, c.trade_name as company_name 
+
+        $search = trim($_GET['search'] ?? '');
+        $date_start = $_GET['date_start'] ?? '';
+        $date_end = $_GET['date_end'] ?? '';
+        $exam_type = trim($_GET['exam_type'] ?? '');
+        
+        $where = [];
+        $params = [];
+        
+        if (!empty($search)) {
+            $where[] = "(p.full_name LIKE :search OR p.cpf LIKE :search)";
+            $search_clean = preg_replace('/[^0-9]/', '', $search);
+            $params['search'] = "%{$search}%";
+            if (!empty($search_clean)) {
+                $where[count($where)-1] = "(p.full_name LIKE :search OR p.cpf LIKE :search OR p.cpf LIKE :search_clean)";
+                $params['search_clean'] = "%{$search_clean}%";
+            }
+        }
+        
+        if (!empty($date_start)) {
+            $where[] = "e.exam_date >= :date_start";
+            $params['date_start'] = $date_start;
+        }
+        
+        if (!empty($date_end)) {
+            $where[] = "e.exam_date <= :date_end";
+            $params['date_end'] = $date_end;
+        }
+        
+        if (!empty($exam_type)) {
+            $where[] = "e.exam_type LIKE :exam_type";
+            $params['exam_type'] = "%{$exam_type}%";
+        }
+        
+        $whereSql = count($where) > 0 ? "WHERE " . implode(" AND ", $where) : "";
+
+        $stmt = $db->prepare("
+            SELECT e.*, p.full_name as patient_name, p.cpf, c.trade_name as company_name 
             FROM exams e 
             JOIN patients p ON e.patient_id = p.id 
-            LEFT JOIN companies c ON e.company_id = c.id
+            LEFT JOIN companies c ON e.company_id = c.id 
+            $whereSql
             ORDER BY e.created_at DESC
-        ")->fetchAll();
+        ");
+        $stmt->execute($params);
+        $exams = $stmt->fetchAll();
         
         // Notificações de sessão para exibição
         $msg = $_SESSION['msg'] ?? null;
         unset($_SESSION['msg']);
 
-        $this->view('admin/exams/index', ['exams' => $exams, 'msg' => $msg]);
+        $this->view('admin/exams/index', [
+            'exams' => $exams, 
+            'msg' => $msg,
+            'search' => $search,
+            'date_start' => $date_start,
+            'date_end' => $date_end,
+            'exam_type' => $exam_type
+        ]);
     }
 
     public function create() {

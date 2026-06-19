@@ -21,15 +21,31 @@
 
         <div class="content-area">
             <div class="page-header">
-                <h1 class="page-title">Empresas Parceiras</h1>
-                <a href="<?= BASE_URL ?>/admin/companies/create" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nova Empresa</a>
+                <h1 class="page-title">Empresas (Corporate)</h1>
+                <a href="<?= BASE_URL ?>/admin/companies/create" class="btn btn-primary"><i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Nova Empresa</a>
             </div>
 
-            <?php if(!empty($msg)): ?>
-                <div class="alert <?= ($_SESSION['msg_type'] ?? 'success') === 'error' ? 'alert-danger' : 'alert-success' ?>" style="background: <?= ($_SESSION['msg_type'] ?? 'success') === 'error' ? '#fef2f2' : '#d1fae5' ?>; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                    <?= htmlspecialchars($msg) ?>
+            <?php if(!empty($_SESSION['msg'])): ?>
+                <div class="alert <?= ($_SESSION['msg_type'] === 'error') ? 'alert-danger' : 'alert-success' ?>" style="display: flex; align-items: center; gap: 0.75rem; border-left: 4px solid <?= ($_SESSION['msg_type'] === 'error') ? '#ef4444' : '#10b981' ?>; box-shadow: var(--shadow-sm); font-weight: 500;">
+                    <i class="fa-solid <?= ($_SESSION['msg_type'] === 'error') ? 'fa-circle-exclamation' : 'fa-circle-check' ?>" style="font-size: 1.25rem;"></i>
+                    <?= htmlspecialchars($_SESSION['msg']); unset($_SESSION['msg']); unset($_SESSION['msg_type']); ?>
                 </div>
             <?php endif; ?>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <form method="GET" action="<?= BASE_URL ?>/admin/companies" style="display: flex; gap: 1rem; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1; margin: 0;">
+                        <label class="form-label">Buscar por Razão Social, Nome Fantasia ou CNPJ</label>
+                        <input type="text" name="search" class="form-control" value="<?= htmlspecialchars($search ?? '') ?>" placeholder="Digite sua busca...">
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-search"></i> Buscar</button>
+                        <?php if(!empty($search)): ?>
+                            <a href="<?= BASE_URL ?>/admin/companies" class="btn btn-secondary">Limpar</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
 
             <div class="card">
                 <div class="table-container">
