@@ -96,3 +96,18 @@ CREATE TABLE IF NOT EXISTS message_logs (
     FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL,
     FOREIGN KEY (sent_by) REFERENCES users(id) ON DELETE SET NULL
 );
+
+-- Criação da tabela de configurações
+CREATE TABLE IF NOT EXISTS settings (
+    setting_key VARCHAR(50) PRIMARY KEY,
+    setting_value TEXT
+);
+
+-- Inserir configurações padrão da WAHA
+INSERT INTO settings (setting_key, setting_value) VALUES 
+('waha_base_url', 'http://localhost:3000'), 
+('waha_api_key', ''), 
+('waha_session', 'default'), 
+('waha_template_patient', 'Olá, {paciente}. Informamos que seus exames da Clínica MedWork já estão disponíveis para consulta. Protocolo: {protocolo}.'), 
+('waha_template_company', 'Olá. Informamos que os exames do colaborador {paciente}, já estão disponíveis para consulta no portal. Protocolo: {protocolo}.')
+ON DUPLICATE KEY UPDATE setting_value=setting_value;
