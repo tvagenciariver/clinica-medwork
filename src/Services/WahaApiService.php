@@ -226,4 +226,32 @@ class WahaApiService {
         curl_exec($ch);
         curl_close($ch);
     }
+
+    public static function sendCancellationNotice($appointmentId) {
+        $db = Database::getInstance();
+        
+        $appt = $db->prepare("
+            SELECT a.*, p.full_name as patient_name, p.main_phone as patient_phone, p.has_whatsapp as patient_wpp
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.id
+            WHERE a.id = :id
+        ");
+        $appt->execute(['id' => $appointmentId]);
+        $data = $appt->fetch();
+
+        if (!$data || !$data['patient_wpp']) {
+            return false;
+        }
+
+        $phone = preg_replace('/[^0-9]/', '', $data['patient_phone']);
+        $proc = $data['procedure_name'];
+        $dt = date('d/m/Y', strtotime($data['appointment_date']));
+        $hr = date('H:i', strtotime($data['appointment_time']));
+
+        $messageText = "Olá, {$data['patient_name']}. Informamos que sua consulta de *{$proc}* agendada para *{$dt} às {$hr}* foi *CANCELADA*. Se precisar remarcar, entre em contato conosco.";
+
+        self::sendDirectMessage($phone, $messageText);
+
+        return true;
+    }
 }

@@ -90,9 +90,13 @@ $router->add('GET', '/admin/appointments/edit/{id}', 'AppointmentController@edit
 $router->add('POST', '/admin/appointments/update/{id}', 'AppointmentController@update');
 $router->add('GET', '/admin/appointments/getTomorrowIds', 'AppointmentController@getTomorrowIds');
 $router->add('POST', '/admin/appointments/sendSingle', 'AppointmentController@sendSingle');
+$router->add('GET', '/admin/appointments/cancel/{id}', 'AppointmentController@cancel');
 
 // Webhook WAHA
 $router->add('POST', '/webhook/waha', 'WebhookController@wahaReceiver');
+
+// Automação / Cron
+$router->add('GET', '/cron/waha-daily', 'CronController@runDailyWaha');
 
 // Dispatch!
 // Pega o caminho relativo à pasta onde o script está rodando

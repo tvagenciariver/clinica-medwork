@@ -90,10 +90,15 @@
                                             <span class="badge badge-default" style="background: #94a3b8; color: white;">Faltou</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td style="text-align: right;">
+                                    <td style="text-align: right; white-space: nowrap;">
                                         <a href="<?= BASE_URL ?>/admin/appointments/edit/<?= $appt['id'] ?>" class="btn btn-sm btn-secondary" title="Editar / Mudar Status">
                                             <i class="fa-solid fa-pen"></i>
                                         </a>
+                                        <?php if($appt['status'] !== 'cancelado'): ?>
+                                        <a href="<?= BASE_URL ?>/admin/appointments/cancel/<?= $appt['id'] ?>" class="btn btn-sm" style="background: #ef4444; color: white;" title="Cancelar e Avisar Paciente" onclick="return confirm('Tem certeza que deseja cancelar esta consulta? O paciente receberá um WhatsApp avisando do cancelamento.');">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

@@ -190,4 +190,30 @@ class AppointmentController extends Controller {
             exit;
         }
     }
+
+    public function cancel($id) {
+        $this->authRequired(['admin']);
+        
+        $db = Database::getInstance();
+        
+        $stmt = $db->prepare("SELECT * FROM appointments WHERE id = ?");
+        $stmt->execute([$id]);
+        $appt = $stmt->fetch();
+        
+        if ($appt && $appt['status'] !== 'cancelado') {
+            // Envia WAHA primeiro
+            WahaApiService::sendCancellationNotice($id);
+            
+            // Atualiza banco
+            $db->prepare("UPDATE appointments SET status = 'cancelado' WHERE id = ?")->execute([$id]);
+            
+            $_SESSION['msg'] = 'Agendamento cancelado com sucesso e paciente notificado.';
+            $_SESSION['msg_type'] = 'success';
+        } else {
+            $_SESSION['msg'] = 'Agendamento não encontrado ou já cancelado.';
+            $_SESSION['msg_type'] = 'error';
+        }
+        
+        $this->redirect('/admin/appointments');
+    }
 }
