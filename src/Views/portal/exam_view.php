@@ -35,7 +35,7 @@
     </div>
 </header>
 
-<main class="viewer-container" style="display: flex; flex-direction: column; gap: 2rem; align-items: center; padding: 2rem 1rem;">
+<main class="viewer-container" style="display: flex; flex-direction: column; justify-content: flex-start; gap: 2rem; align-items: center; padding: 2rem 1rem;">
     <?php
     $paths = [];
     if (!empty($exam['file_path'])) {
@@ -69,7 +69,7 @@
             
             <?php if ($isImage): ?>
                 <div class="drag-container" id="drag-container-<?= $index ?>" style="width: 100%; overflow: auto; text-align: center; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #fff; max-height: 80vh; cursor: grab;">
-                    <img id="img-<?= $index ?>" src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="max-width: 100%; transition: transform 0.2s ease; transform-origin: top center; pointer-events: none;" data-zoom="1">
+                    <img id="img-<?= $index ?>" src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="width: 100%; max-width: none; transition: width 0.2s ease; pointer-events: none;" data-zoom="1">
                 </div>
             <?php else: ?>
                 <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="width: 100%; height: 800px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>
@@ -103,14 +103,10 @@ function changeZoom(imgId, delta) {
     img.setAttribute('data-zoom', newZoom);
     label.innerText = newZoom + 'x';
     
-    // Se o zoom for maior que 1, precisamos permitir que a imagem cresça além do container
-    if (newZoom > 1) {
-        img.style.maxWidth = 'none';
-    } else {
-        img.style.maxWidth = '100%';
-    }
-    
-    img.style.transform = 'scale(' + newZoom + ')';
+    // Alterando o tamanho real da imagem para que o container crie a barra de rolagem corretamente
+    img.style.maxWidth = 'none';
+    img.style.width = (newZoom * 100) + '%';
+    img.style.height = 'auto';
 }
 
 // Suporte para arrastar (pan) a imagem e clique duplo
