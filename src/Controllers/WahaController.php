@@ -42,7 +42,7 @@ class WahaController extends Controller {
             ];
 
             try {
-                $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:key, :val) ON DUPLICATE KEY UPDATE setting_value = :val");
+                $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:key, :val) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
                 foreach ($fields as $field) {
                     $val = trim($_POST[$field] ?? '');
                     $stmt->execute([
@@ -54,7 +54,7 @@ class WahaController extends Controller {
                 $_SESSION['msg'] = 'Configurações da WAHA atualizadas com sucesso!';
                 $_SESSION['msg_type'] = 'success';
             } catch (\PDOException $e) {
-                $_SESSION['msg'] = 'Erro ao salvar as configurações.';
+                $_SESSION['msg'] = 'Erro ao salvar as configurações: ' . $e->getMessage();
                 $_SESSION['msg_type'] = 'error';
             }
             
