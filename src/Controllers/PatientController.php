@@ -113,4 +113,113 @@ class PatientController extends Controller {
             }
         }
     }
+
+    public function edit($id) {
+        $this->authRequired(['admin', 'employee']);
+        
+        $db = Database::getInstance();
+        
+        $stmt = $db->prepare("SELECT * FROM patients WHERE id = ?");
+        $stmt->execute([$id]);
+        $patient = $stmt->fetch();
+        
+        if (!$patient) {
+            $_SESSION['msg'] = 'Paciente não encontrado.';
+            $_SESSION['msg_type'] = 'error';
+            $this->redirect('/admin/patients');
+        }
+
+        if ($patient['birth_date']) {
+            $parts = explode('-', $patient['birth_date']);
+            if (count($parts) === 3) {
+                $patient['birth_date_br'] = $parts[2] . '/' . $parts[1] . '/' . $parts[0];
+            }
+        }
+
+        $companies = $db->query("SELECT id, trade_name FROM companies WHERE status = 'active' ORDER BY trade_name ASC")->fetchAll();
+        
+        $this->view('admin/patients/edit', ['patient' => $patient, 'companies' => $companies]);
+    }
+
+    public function update($id) {
+        $this->authRequired(['admin', 'employee']);
+        if ($this->isPost()) {
+            $db = Database::getInstance();
+            
+            $full_name = trim($_POST['full_name'] ?? '');
+            $cpf = preg_replace('/[^0-9]/', '', $_POST['cpf'] ?? '');
+            $birth_date_input = trim($_POST['birth_date'] ?? '');
+            $birth_date = null;
+            if (strlen($birth_date_input) === 10) {
+                $parts = explode('/', $birth_date_input);
+                if (count($parts) === 3) {
+                    $birth_date = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+                }
+            }
+            
+            $main_phone = $_POST['main_phone'] ?? '';
+            $has_whatsapp = isset($_POST['has_whatsapp']) ? 1 : 0;
+            $email = $_POST['email'] ?? null;
+            $default_company_id = !empty($_POST['default_company_id']) ? $_POST['default_company_id'] : null;
+
+            try {
+                $stmt = $db->prepare("
+                    UPDATE patients 
+                    SET full_name = :full_name, cpf = :cpf, birth_date = :birth_date, 
+                        main_phone = :main_phone, has_whatsapp = :has_whatsapp, 
+                        email = :email, default_company_id = :default_company_id
+                    WHERE id = :id
+                ");
+                
+                $stmt->execute([
+                    'full_name' => $full_name,
+                    'cpf' => $cpf,
+                    'birth_date' => $birth_date,
+                    'main_phone' => $main_phone,
+                    'has_whatsapp' => $has_whatsapp,
+                    'email' => $email,
+                    'default_company_id' => $default_company_id,
+                    'id' => $id
+                ]);
+
+                // Update portal user if email is updated and user exists
+                $stmtUserCheck = $db->prepare("SELECT id FROM users WHERE patient_id = ?");
+                $stmtUserCheck->execute([$id]);
+                if ($stmtUserCheck->fetch()) {
+                    if (!empty($email)) {
+                        $db->prepare("UPDATE users SET email = :email, name = :name WHERE patient_id = :id")->execute([
+                            'email' => $email,
+                            'name' => $full_name,
+                            'id' => $id
+                        ]);
+                    }
+                } else if (!empty($email)) {
+                    // Create user if didn't exist but now has email
+                    $password = password_hash($cpf, PASSWORD_DEFAULT);
+                    $stmtUser = $db->prepare("
+                        INSERT INTO users (name, email, password, role, patient_id) 
+                        VALUES (:name, :email, :password, 'patient', :patient_id)
+                    ");
+                    $stmtUser->execute([
+                        'name' => $full_name,
+                        'email' => $email,
+                        'password' => $password,
+                        'patient_id' => $id
+                    ]);
+                }
+
+                $_SESSION['msg'] = 'Paciente atualizado com sucesso!';
+                $_SESSION['msg_type'] = 'success';
+                $this->redirect('/admin/patients');
+            } catch (\PDOException $e) {
+                if ($e->getCode() == 23000) {
+                    $_SESSION['msg'] = 'Este CPF ou Email já está em uso por outro paciente.';
+                } else {
+                    $_SESSION['msg'] = 'Ocorreu um erro ao atualizar o paciente.';
+                }
+                $_SESSION['msg_type'] = 'error';
+                $this->redirect('/admin/patients/edit/' . $id);
+            }
+        }
+    }
 }

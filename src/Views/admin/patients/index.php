@@ -68,7 +68,7 @@
                                 </td>
                                 <td><?= htmlspecialchars($p['company_name'] ?? 'Particular') ?></td>
                                 <td>
-                                    <button class="btn btn-secondary btn-sm"><i class="fa-solid fa-pen"></i></button>
+                                    <a href="<?= BASE_URL ?>/admin/patients/edit/<?= $p['id'] ?>" class="btn btn-secondary btn-sm" title="Editar Paciente"><i class="fa-solid fa-pen"></i></a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

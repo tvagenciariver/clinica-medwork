@@ -53,6 +53,8 @@ $router->add('GET', '/admin/dashboard', 'DashboardController@index');
 $router->add('GET', '/admin/patients', 'PatientController@index');
 $router->add('GET', '/admin/patients/create', 'PatientController@create');
 $router->add('POST', '/admin/patients/store', 'PatientController@store');
+$router->add('GET', '/admin/patients/edit/{id}', 'PatientController@edit');
+$router->add('POST', '/admin/patients/update/{id}', 'PatientController@update');
 
 // Empresas
 $router->add('GET', '/admin/companies', 'CompanyController@index');
