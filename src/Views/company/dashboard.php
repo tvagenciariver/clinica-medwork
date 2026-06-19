@@ -52,7 +52,7 @@
                         <td><span class="badge badge-success">Liberado</span></td>
                         <td>
                             <?php if(!empty($e['file_path'])): ?>
-                                <a href="<?= BASE_URL ?>/<?= $e['file_path'] ?>" target="_blank" class="btn btn-primary btn-sm"><i class="fa-solid fa-file-pdf"></i> Acessar ASO</a>
+                                <a href="<?= BASE_URL ?>/portal/exam/view/<?= $e['id'] ?>" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> Visualizar ASO</a>
                             <?php else: ?>
                                 <span class="badge badge-default">Sem Arquivo</span>
                             <?php endif; ?>

@@ -50,6 +50,7 @@ $router->add('GET', '/admin/exams/sendWaha', 'ExamController@sendWaha');
 // Portais
 $router->add('GET', '/patient/dashboard', 'PortalController@patient');
 $router->add('GET', '/company/dashboard', 'PortalController@company');
+$router->add('GET', '/portal/exam/view/{id}', 'PortalController@viewExam');
 
 // Logs (Apenas Admin)
 $router->add('GET', '/admin/logs', 'LogController@index');

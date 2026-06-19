@@ -44,4 +44,41 @@ class PortalController extends Controller {
         
         $this->view('company/dashboard', ['exams' => $exams]);
     }
+
+    public function viewExam($id) {
+        $this->authRequired(['company', 'patient']);
+        $db = Database::getInstance();
+
+        $stmt = $db->prepare("SELECT e.*, p.full_name as patient_name FROM exams e JOIN patients p ON e.patient_id = p.id WHERE e.id = :id");
+        $stmt->execute(['id' => $id]);
+        $exam = $stmt->fetch();
+
+        if (!$exam || empty($exam['file_path'])) {
+            die("Exame não encontrado ou arquivo indisponível.");
+        }
+
+        // Check permissions
+        if ($_SESSION['role'] === 'company' && $exam['company_id'] != $_SESSION['company_id']) {
+            die("Acesso negado.");
+        }
+        if ($_SESSION['role'] === 'patient' && $exam['patient_id'] != $_SESSION['patient_id']) {
+            die("Acesso negado.");
+        }
+
+        // Update status if it's the first time viewing
+        $newStatus = null;
+        if ($_SESSION['role'] === 'company' && in_array($exam['status'], ['available', 'sent_whatsapp', 'viewed_patient'])) {
+            $newStatus = 'viewed_company';
+        } else if ($_SESSION['role'] === 'patient' && in_array($exam['status'], ['available', 'sent_whatsapp'])) {
+            $newStatus = 'viewed_patient';
+        }
+
+        if ($newStatus) {
+            $update = $db->prepare("UPDATE exams SET status = :status WHERE id = :id");
+            $update->execute(['status' => $newStatus, 'id' => $id]);
+        }
+
+        // Load viewer
+        $this->view('portal/exam_view', ['exam' => $exam]);
+    }
 }
