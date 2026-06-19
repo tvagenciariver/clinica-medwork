@@ -52,14 +52,21 @@
         $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
     ?>
         <div style="width: 100%; max-width: 1200px; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-            <div style="width: 100%; display: flex; justify-content: flex-end;">
+            <div style="width: 100%; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <?php if ($isImage): ?>
+                    <button onclick="toggleZoom('img-<?= $index ?>')" class="btn btn-secondary btn-sm" title="Clique para dar Zoom">
+                        <i class="fa-solid fa-magnifying-glass-plus"></i> Zoom na Imagem
+                    </button>
+                <?php endif; ?>
                 <a href="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" download class="btn btn-primary btn-sm"><i class="fa-solid fa-download"></i> Baixar Arquivo <?= count($paths) > 1 ? ($index + 1) : '' ?></a>
             </div>
             
             <?php if ($isImage): ?>
-                <img src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="max-width: 100%; height: auto; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border-radius: 8px;">
+                <div style="width: 100%; overflow: auto; text-align: center; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #fff;">
+                    <img id="img-<?= $index ?>" src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="max-width: 100%; height: auto; cursor: zoom-in; transition: all 0.3s ease;">
+                </div>
             <?php else: ?>
-                <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" class="file-frame" style="width: 100%; min-height: 80vh; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>
+                <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="width: 100%; height: 800px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>
             <?php endif; ?>
         </div>
         
@@ -73,6 +80,26 @@
         <p>Nenhum arquivo anexado a este exame.</p>
     <?php endif; ?>
 </main>
+
+<script>
+function toggleZoom(imgId) {
+    var img = document.getElementById(imgId);
+    if (img.style.maxWidth === '100%') {
+        img.style.maxWidth = 'none';
+        img.style.cursor = 'zoom-out';
+    } else {
+        img.style.maxWidth = '100%';
+        img.style.cursor = 'zoom-in';
+    }
+}
+
+// Add click listener to image directly too
+document.querySelectorAll('img[id^="img-"]').forEach(function(img) {
+    img.addEventListener('click', function() {
+        toggleZoom(this.id);
+    });
+});
+</script>
 
 </body>
 </html>
