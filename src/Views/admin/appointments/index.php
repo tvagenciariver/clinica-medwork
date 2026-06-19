@@ -7,18 +7,22 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
     <style>
         .kanban-board {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
-            overflow-x: auto;
             padding-bottom: 2rem;
-            min-height: 70vh;
             align-items: flex-start;
+        }
+        /* Forçar blocos de no máximo 4 em telas grandes */
+        @media (min-width: 1400px) {
+            .kanban-board {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
         .kanban-col {
             background: #f8fafc;
             border-radius: 8px;
-            min-width: 320px;
-            max-width: 320px;
+            width: 100%;
             display: flex;
             flex-direction: column;
             border: 1px solid #e2e8f0;
