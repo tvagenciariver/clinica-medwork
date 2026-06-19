@@ -74,8 +74,12 @@
                                         <span class="badge badge-warning">Disponível</span>
                                     <?php elseif($exam['status'] === 'sent_whatsapp'): ?>
                                         <span class="badge badge-success">Enviado WhatsApp</span>
+                                    <?php elseif($exam['status'] === 'viewed_company'): ?>
+                                        <span class="badge" style="background: #e0e7ff; color: #3730a3;">Visualizado pela Empresa</span>
+                                    <?php elseif($exam['status'] === 'viewed_patient'): ?>
+                                        <span class="badge" style="background: #e0e7ff; color: #3730a3;">Visualizado pelo Paciente</span>
                                     <?php else: ?>
-                                        <span class="badge badge-info"><?= $exam['status'] ?></span>
+                                        <span class="badge badge-info"><?= htmlspecialchars($exam['status']) ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td><?= date('d/m/Y', strtotime($exam['created_at'])) ?></td>
