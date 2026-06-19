@@ -4,6 +4,10 @@
 // Inicia sessão
 session_start();
 
+// Permite que o sistema seja embutido em Iframes de outros sites
+header("Content-Security-Policy: frame-ancestors *");
+header("X-Frame-Options: ALLOWALL");
+
 // Configurações e requires base (substituindo composer autoload por algo simples)
 require_once __DIR__ . '/../config/database.php';
 
