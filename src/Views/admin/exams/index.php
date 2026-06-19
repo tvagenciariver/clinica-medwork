@@ -91,14 +91,18 @@
                                         <span class="badge badge-warning">Disponível</span>
                                     <?php elseif($e['status'] === 'sent_whatsapp'): ?>
                                         <span class="badge badge-success">Notificado WP</span>
+                                    <?php elseif($e['status'] === 'viewed_company'): ?>
+                                        <span class="badge" style="background: #e0e7ff; color: #3730a3;"><i class="fa-solid fa-eye"></i> Visualizado pela Empresa</span>
+                                    <?php elseif($e['status'] === 'viewed_patient'): ?>
+                                        <span class="badge" style="background: #e0e7ff; color: #3730a3;"><i class="fa-solid fa-eye"></i> Visualizado pelo Paciente</span>
                                     <?php else: ?>
-                                        <span class="badge badge-info"><?= $e['status'] ?></span>
+                                        <span class="badge badge-info"><?= htmlspecialchars($e['status']) ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if($e['status'] === 'registered' || $e['status'] === 'processing'): ?>
                                         <a href="<?= BASE_URL ?>/admin/exams/makeAvailable?id=<?= $e['id'] ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-check"></i> Marcar Disponível</a>
-                                    <?php elseif($e['status'] === 'available' || $e['status'] === 'sent_whatsapp'): ?>
+                                    <?php elseif(in_array($e['status'], ['available', 'sent_whatsapp', 'viewed_company', 'viewed_patient'])): ?>
                                         <div style="display: flex; gap: 0.5rem;">
                                             <a href="<?= BASE_URL ?>/admin/exams/sendWaha?id=<?= $e['id'] ?>&target=patient" class="btn btn-sm" style="background: #25D366; color: white; padding: 0.5rem;"><i class="fa-brands fa-whatsapp"></i> Paciente</a>
                                             
