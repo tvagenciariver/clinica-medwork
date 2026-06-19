@@ -160,6 +160,116 @@ class ExamController extends Controller {
         }
     }
 
+    public function edit($id) {
+        $this->authRequired(['admin', 'employee']);
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT * FROM exams WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $exam = $stmt->fetch();
+
+        if (!$exam) {
+            $_SESSION['msg'] = 'Exame não encontrado.';
+            $_SESSION['msg_type'] = 'error';
+            $this->redirect('/admin/exams');
+        }
+
+        $patients = $db->query("SELECT id, full_name, cpf FROM patients ORDER BY full_name ASC")->fetchAll();
+        $companies = $db->query("SELECT id, trade_name FROM companies WHERE status = 'active' ORDER BY trade_name ASC")->fetchAll();
+        $this->view('admin/exams/edit', ['exam' => $exam, 'patients' => $patients, 'companies' => $companies]);
+    }
+
+    public function update($id) {
+        $this->authRequired(['admin', 'employee']);
+        if ($this->isPost()) {
+            $db = Database::getInstance();
+            
+            // Check if exam exists
+            $stmt = $db->prepare("SELECT * FROM exams WHERE id = :id");
+            $stmt->execute(['id' => $id]);
+            $exam = $stmt->fetch();
+            if (!$exam) {
+                $this->redirect('/admin/exams');
+            }
+
+            $patient_id = $_POST['patient_id'] ?? null;
+            $origin = $_POST['origin'] ?? 'private';
+            $company_id = ($origin === 'company' && !empty($_POST['company_id'])) ? $_POST['company_id'] : null;
+            $exam_type = trim($_POST['exam_type'] ?? '');
+            
+            $exam_date_input = trim($_POST['exam_date'] ?? '');
+            $exam_date = $exam['exam_date']; // fallback
+            if (strlen($exam_date_input) === 10) {
+                $parts = explode('/', $exam_date_input);
+                if (count($parts) === 3) {
+                    $exam_date = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+                }
+            }
+
+            $responsible_doctor = trim($_POST['responsible_doctor'] ?? '');
+            $observations = trim($_POST['observations'] ?? '');
+            $allow_whatsapp = isset($_POST['allow_whatsapp']) ? 1 : 0;
+            $status = $_POST['status'] ?? $exam['status'];
+            
+            // Process file upload if provided
+            $file_paths = [];
+            $hasNewFiles = false;
+            
+            if (isset($_FILES['exam_files']) && is_array($_FILES['exam_files']['name']) && !empty($_FILES['exam_files']['name'][0])) {
+                $hasNewFiles = true;
+                $uploadDir = __DIR__ . '/../../public/uploads/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $count = count($_FILES['exam_files']['name']);
+                for ($i = 0; $i < $count; $i++) {
+                    if ($_FILES['exam_files']['error'][$i] === UPLOAD_ERR_OK) {
+                        $ext = pathinfo($_FILES['exam_files']['name'][$i], PATHINFO_EXTENSION);
+                        // Append timestamp to avoid caching issues on same name
+                        $fileName = $exam['protocol_code'] . '_' . time() . '_' . $i . '.' . $ext;
+                        if (move_uploaded_file($_FILES['exam_files']['tmp_name'][$i], $uploadDir . $fileName)) {
+                            $file_paths[] = 'uploads/' . $fileName;
+                        }
+                    }
+                }
+            }
+
+            $file_path_db = $hasNewFiles ? json_encode($file_paths) : $exam['file_path'];
+
+            try {
+                $stmt = $db->prepare("
+                    UPDATE exams 
+                    SET patient_id = :patient_id, origin = :origin, company_id = :company_id, 
+                        exam_type = :exam_type, exam_date = :exam_date, responsible_doctor = :responsible_doctor, 
+                        observations = :observations, allow_whatsapp = :allow_whatsapp, status = :status,
+                        file_path = :file_path
+                    WHERE id = :id
+                ");
+                $stmt->execute([
+                    'patient_id' => $patient_id,
+                    'origin' => $origin,
+                    'company_id' => $company_id,
+                    'exam_type' => $exam_type,
+                    'exam_date' => $exam_date,
+                    'responsible_doctor' => $responsible_doctor,
+                    'observations' => $observations,
+                    'allow_whatsapp' => $allow_whatsapp,
+                    'status' => $status,
+                    'file_path' => $file_path_db,
+                    'id' => $id
+                ]);
+                
+                $_SESSION['msg'] = 'Exame atualizado com sucesso!';
+                $_SESSION['msg_type'] = 'success';
+                $this->redirect('/admin/exams');
+            } catch (\PDOException $e) {
+                $_SESSION['msg'] = 'Erro ao atualizar exame: ' . $e->getMessage();
+                $_SESSION['msg_type'] = 'error';
+                $this->redirect('/admin/exams/edit/' . $id);
+            }
+        }
+    }
+
     // Tela de envio WAHA simulada para a rota
     public function sendWaha() {
         $this->authRequired(['admin', 'employee']);

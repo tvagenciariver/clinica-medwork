@@ -52,6 +52,8 @@ $router->add('POST', '/admin/companies/update/{id}', 'CompanyController@update')
 $router->add('GET', '/admin/exams', 'ExamController@index');
 $router->add('GET', '/admin/exams/create', 'ExamController@create');
 $router->add('POST', '/admin/exams/store', 'ExamController@store');
+$router->add('GET', '/admin/exams/edit/{id}', 'ExamController@edit');
+$router->add('POST', '/admin/exams/update/{id}', 'ExamController@update');
 $router->add('GET', '/admin/exams/makeAvailable', 'ExamController@makeAvailable');
 $router->add('GET', '/admin/exams/sendWaha', 'ExamController@sendWaha');
 

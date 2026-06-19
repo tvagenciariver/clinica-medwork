@@ -68,7 +68,7 @@
                                 <th>Origem</th>
                                 <th>Tipo</th>
                                 <th>Status</th>
-                                <th>Ações WAHA</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,17 +100,19 @@
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if($e['status'] === 'registered' || $e['status'] === 'processing'): ?>
-                                        <a href="<?= BASE_URL ?>/admin/exams/makeAvailable?id=<?= $e['id'] ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-check"></i> Marcar Disponível</a>
-                                    <?php elseif(in_array($e['status'], ['available', 'sent_whatsapp', 'viewed_company', 'viewed_patient'])): ?>
-                                        <div style="display: flex; gap: 0.5rem;">
-                                            <a href="<?= BASE_URL ?>/admin/exams/sendWaha?id=<?= $e['id'] ?>&target=patient" class="btn btn-sm" style="background: #25D366; color: white; padding: 0.5rem;"><i class="fa-brands fa-whatsapp"></i> Paciente</a>
+                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                        <a href="<?= BASE_URL ?>/admin/exams/edit/<?= $e['id'] ?>" class="btn btn-secondary btn-sm" title="Editar"><i class="fa-solid fa-pencil"></i></a>
+                                        
+                                        <?php if($e['status'] === 'registered' || $e['status'] === 'processing'): ?>
+                                            <a href="<?= BASE_URL ?>/admin/exams/makeAvailable?id=<?= $e['id'] ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-check"></i> Marcar Disponível</a>
+                                        <?php elseif(in_array($e['status'], ['available', 'sent_whatsapp', 'viewed_company', 'viewed_patient'])): ?>
+                                            <a href="<?= BASE_URL ?>/admin/exams/sendWaha?id=<?= $e['id'] ?>&target=patient" class="btn btn-sm" style="background: #25D366; color: white; padding: 0.5rem;" title="WAHA Paciente"><i class="fa-brands fa-whatsapp"></i> Paciente</a>
                                             
                                             <?php if($e['origin'] === 'company'): ?>
-                                                <a href="<?= BASE_URL ?>/admin/exams/sendWaha?id=<?= $e['id'] ?>&target=company" class="btn btn-sm" style="background: #128C7E; color: white; padding: 0.5rem;"><i class="fa-brands fa-whatsapp"></i> Empresa</a>
+                                                <a href="<?= BASE_URL ?>/admin/exams/sendWaha?id=<?= $e['id'] ?>&target=company" class="btn btn-sm" style="background: #128C7E; color: white; padding: 0.5rem;" title="WAHA Empresa"><i class="fa-brands fa-whatsapp"></i> Empresa</a>
                                             <?php endif; ?>
-                                        </div>
-                                    <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
