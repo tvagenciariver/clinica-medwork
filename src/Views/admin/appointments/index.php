@@ -2,9 +2,82 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Agenda de Procedimentos - MedWork</title>
+    <title>Agenda Kanban - MedWork</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+    <style>
+        .kanban-board {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 2rem;
+            min-height: 70vh;
+            align-items: flex-start;
+        }
+        .kanban-col {
+            background: #f8fafc;
+            border-radius: 8px;
+            min-width: 320px;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e2e8f0;
+            max-height: calc(100vh - 200px);
+        }
+        .kanban-header {
+            padding: 1rem;
+            border-bottom: 2px solid;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border-radius: 8px 8px 0 0;
+        }
+        .kanban-body {
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .kanban-card {
+            background: white;
+            border-radius: 6px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary);
+            position: relative;
+        }
+        .k-card-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+        .k-card-time {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .k-card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #f1f5f9;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
 
@@ -21,13 +94,14 @@
 
         <div class="content-area">
             <?php if(isset($msg)): ?>
-                <div class="alert alert-<?= $msg_type === 'error' ? 'danger' : $msg_type ?>">
+                <div class="alert <?= ($msg_type === 'error') ? 'alert-danger' : 'alert-success' ?>" style="display: flex; align-items: center; gap: 0.75rem; border-left: 4px solid <?= ($msg_type === 'error') ? '#ef4444' : '#10b981' ?>; box-shadow: var(--shadow-sm); font-weight: 500;">
+                    <i class="fa-solid <?= ($msg_type === 'error') ? 'fa-circle-exclamation' : 'fa-circle-check' ?>" style="font-size: 1.25rem;"></i>
                     <?= htmlspecialchars($msg) ?>
                 </div>
             <?php endif; ?>
 
             <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h1 class="page-title"><i class="fa-solid fa-calendar-check" style="color: var(--primary); margin-right: 0.5rem;"></i> Agenda de Procedimentos</h1>
+                <h1 class="page-title"><i class="fa-solid fa-calendar-check" style="color: var(--primary); margin-right: 0.5rem;"></i> Agenda Kanban</h1>
                 
                 <div style="display: flex; gap: 1rem; align-items: center;">
                     <button type="button" id="btn-disparar" class="btn" style="background: #25D366; color: white;" onclick="startWahaQueue()">
@@ -42,71 +116,96 @@
                 </div>
             </div>
 
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Data e Hora</th>
-                            <th>Paciente</th>
-                            <th>Procedimento</th>
-                            <th>WhatsApp</th>
-                            <th>Status</th>
-                            <th style="text-align: right;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if(empty($appointments)): ?>
-                            <tr>
-                                <td colspan="6" style="text-align: center;">Nenhum agendamento encontrado.</td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach($appointments as $appt): ?>
-                                <tr>
-                                    <td>
-                                        <strong><?= date('d/m/Y', strtotime($appt['appointment_date'])) ?></strong><br>
-                                        <small style="color: var(--text-muted);"><i class="fa-regular fa-clock"></i> <?= date('H:i', strtotime($appt['appointment_time'])) ?></small>
-                                    </td>
-                                    <td>
-                                        <?= htmlspecialchars($appt['patient_name']) ?>
-                                    </td>
-                                    <td><?= htmlspecialchars($appt['procedure_name']) ?></td>
-                                    <td>
-                                        <?php if($appt['has_whatsapp']): ?>
-                                            <span class="badge badge-success" title="<?= htmlspecialchars($appt['main_phone']) ?>"><i class="fa-brands fa-whatsapp"></i> Sim</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-default">Não</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <?php if($appt['status'] === 'agendado'): ?>
-                                            <span class="badge badge-warning">Agendado</span>
-                                        <?php elseif($appt['status'] === 'confirmado'): ?>
-                                            <span class="badge badge-success">Confirmado</span>
-                                        <?php elseif($appt['status'] === 'cancelado'): ?>
-                                            <span class="badge badge-danger">Cancelado</span>
-                                        <?php elseif($appt['status'] === 'atendido'): ?>
-                                            <span class="badge badge-info">Atendido</span>
-                                        <?php elseif($appt['status'] === 'faltou'): ?>
-                                            <span class="badge badge-default" style="background: #94a3b8; color: white;">Faltou</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td style="text-align: right; white-space: nowrap;">
-                                        <a href="<?= BASE_URL ?>/admin/appointments/edit/<?= $appt['id'] ?>" class="btn btn-sm btn-secondary" title="Editar / Mudar Status">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </a>
-                                        <?php if($appt['status'] !== 'cancelado'): ?>
-                                        <a href="<?= BASE_URL ?>/admin/appointments/cancel/<?= $appt['id'] ?>" class="btn btn-sm" style="background: #ef4444; color: white;" title="Cancelar e Avisar Paciente" onclick="return confirm('Tem certeza que deseja cancelar esta consulta? O paciente receberá um WhatsApp avisando do cancelamento.');">
-                                            <i class="fa-solid fa-xmark"></i>
-                                        </a>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+            <?php
+            // Organizar agendamentos por especialidade
+            $kanban = [];
+            foreach ($specialties as $spec) {
+                $kanban[$spec['id']] = [
+                    'name' => $spec['name'],
+                    'color' => $spec['color_hex'],
+                    'appointments' => []
+                ];
+            }
+            $kanban['sem_setor'] = [
+                'name' => 'Geral / Sem Setor',
+                'color' => '#64748b',
+                'appointments' => []
+            ];
 
+            foreach ($appointments as $appt) {
+                if ($appt['specialty_id'] && isset($kanban[$appt['specialty_id']])) {
+                    $kanban[$appt['specialty_id']]['appointments'][] = $appt;
+                } else {
+                    $kanban['sem_setor']['appointments'][] = $appt;
+                }
+            }
+            ?>
+
+            <div class="kanban-board">
+                <?php foreach($kanban as $colId => $col): ?>
+                    <?php if(empty($col['appointments']) && $colId === 'sem_setor') continue; // Oculta 'Sem setor' se estiver vazio ?>
+                    
+                    <div class="kanban-col">
+                        <div class="kanban-header" style="border-bottom-color: <?= htmlspecialchars($col['color']) ?>;">
+                            <span><?= htmlspecialchars($col['name']) ?></span>
+                            <span class="badge badge-secondary"><?= count($col['appointments']) ?></span>
+                        </div>
+                        
+                        <div class="kanban-body">
+                            <?php if (empty($col['appointments'])): ?>
+                                <div style="text-align: center; color: #94a3b8; font-size: 0.875rem; padding: 2rem 0;">
+                                    Nenhum agendamento.
+                                </div>
+                            <?php else: ?>
+                                <?php foreach($col['appointments'] as $appt): ?>
+                                    <div class="kanban-card" style="border-left-color: <?= htmlspecialchars($col['color']) ?>;">
+                                        <div class="k-card-title">
+                                            <?= htmlspecialchars($appt['patient_name']) ?>
+                                            <?php if($appt['has_whatsapp']): ?>
+                                                <i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 0.875rem;" title="Possui WhatsApp"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="k-card-time">
+                                            <i class="fa-regular fa-calendar"></i> <?= date('d/m/Y', strtotime($appt['appointment_date'])) ?>
+                                            <i class="fa-regular fa-clock" style="margin-left: 0.5rem;"></i> <?= date('H:i', strtotime($appt['appointment_time'])) ?>
+                                        </div>
+                                        
+                                        <div style="margin-bottom: 0.5rem;">
+                                            <?php if($appt['status'] === 'agendado'): ?>
+                                                <span class="status-badge" style="background: #e0e7ff; color: #4338ca;">Pendente</span>
+                                            <?php elseif($appt['status'] === 'confirmado'): ?>
+                                                <span class="status-badge" style="background: #dcfce7; color: #15803d;">Confirmado</span>
+                                            <?php elseif($appt['status'] === 'atendido'): ?>
+                                                <span class="status-badge" style="background: #f1f5f9; color: #475569;">Atendido</span>
+                                            <?php elseif($appt['status'] === 'cancelado'): ?>
+                                                <span class="status-badge" style="background: #fee2e2; color: #b91c1c;">Cancelado</span>
+                                            <?php elseif($appt['status'] === 'faltou'): ?>
+                                                <span class="status-badge" style="background: #fef3c7; color: #b45309;">Faltou</span>
+                                            <?php endif; ?>
+                                        </div>
+
+                                        <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">
+                                            <strong>Proc:</strong> <?= htmlspecialchars($appt['procedure_name'] ?: 'Não especificado') ?>
+                                        </div>
+
+                                        <div class="k-card-actions">
+                                            <a href="<?= BASE_URL ?>/admin/appointments/edit/<?= $appt['id'] ?>" class="btn btn-sm btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+                                                <i class="fa-solid fa-pen"></i> Editar
+                                            </a>
+                                            <?php if($appt['status'] !== 'cancelado'): ?>
+                                            <a href="<?= BASE_URL ?>/admin/appointments/cancel/<?= $appt['id'] ?>" class="btn btn-sm" style="background: #ef4444; color: white; padding: 4px 8px; font-size: 0.75rem;" onclick="return confirm('Deseja cancelar esta consulta e avisar via WhatsApp?');">
+                                                <i class="fa-solid fa-xmark"></i> Cancelar
+                                            </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            
         </div>
     </main>
 </div>

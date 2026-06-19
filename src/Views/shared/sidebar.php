@@ -7,11 +7,14 @@
         <a href="<?= BASE_URL ?>/admin/dashboard" class="nav-item">
             <i class="fa-solid fa-house"></i> Dashboard
         </a>
-        <a href="<?= BASE_URL ?>/admin/exams" class="nav-item">
-            <i class="fa-solid fa-file-medical"></i> Exames
+        <a href="<?= BASE_URL ?>/admin/exams" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/exams') !== false ? 'active' : '' ?>">
+            <i class="fa-solid fa-file-medical"></i> Exames e Laudos
         </a>
-        <a href="<?= BASE_URL ?>/admin/appointments" class="nav-item">
-            <i class="fa-solid fa-calendar-check"></i> Agenda
+        <a href="<?= BASE_URL ?>/admin/appointments" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/appointments') !== false ? 'active' : '' ?>">
+            <i class="fa-solid fa-calendar-check"></i> Agenda Kanban
+        </a>
+        <a href="<?= BASE_URL ?>/admin/specialties" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/specialties') !== false ? 'active' : '' ?>">
+            <i class="fa-solid fa-list"></i> Especialidades
         </a>
         <a href="<?= BASE_URL ?>/admin/patients" class="nav-item">
             <i class="fa-solid fa-users"></i> Pacientes

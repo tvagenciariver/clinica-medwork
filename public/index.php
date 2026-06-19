@@ -24,18 +24,39 @@ try {
     $db = \Core\Database::getInstance();
     $db->query("ALTER TABLE exams MODIFY file_path TEXT");
     
+    // Create specialties table
+    $db->query("CREATE TABLE IF NOT EXISTS specialties (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(150) NOT NULL,
+        color_hex VARCHAR(7) DEFAULT '#3b82f6',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    
+    // Insert default specialties if empty
+    $count = $db->query("SELECT COUNT(*) FROM specialties")->fetchColumn();
+    if ($count == 0) {
+        $db->query("INSERT INTO specialties (name, color_hex) VALUES ('Clínica Geral', '#3b82f6'), ('Raio-X', '#f59e0b'), ('Audiometria', '#10b981'), ('Psicologia', '#8b5cf6')");
+    }
+
     // Create appointments table
     $db->query("CREATE TABLE IF NOT EXISTS appointments (
         id INT AUTO_INCREMENT PRIMARY KEY,
         patient_id INT NOT NULL,
-        procedure_name VARCHAR(150) NOT NULL,
+        specialty_id INT DEFAULT NULL,
+        procedure_name VARCHAR(150) NULL,
         appointment_date DATE NOT NULL,
         appointment_time TIME NOT NULL,
         status ENUM('agendado', 'confirmado', 'cancelado', 'atendido', 'faltou') DEFAULT 'agendado',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+        FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+        FOREIGN KEY (specialty_id) REFERENCES specialties(id) ON DELETE SET NULL
     )");
+
+    // Migration to add specialty_id to existing appointments table
+    $db->query("ALTER TABLE appointments ADD COLUMN specialty_id INT DEFAULT NULL AFTER patient_id");
+    $db->query("ALTER TABLE appointments MODIFY procedure_name VARCHAR(150) NULL");
+    $db->query("ALTER TABLE appointments ADD CONSTRAINT fk_specialty FOREIGN KEY (specialty_id) REFERENCES specialties(id) ON DELETE SET NULL");
 } catch (\Throwable $e) {
     // ignore if already done or errors
 }
@@ -97,6 +118,14 @@ $router->add('POST', '/admin/appointments/update/{id}', 'AppointmentController@u
 $router->add('GET', '/admin/appointments/getTomorrowIds', 'AppointmentController@getTomorrowIds');
 $router->add('POST', '/admin/appointments/sendSingle', 'AppointmentController@sendSingle');
 $router->add('GET', '/admin/appointments/cancel/{id}', 'AppointmentController@cancel');
+
+// Especialidades
+$router->add('GET', '/admin/specialties', 'SpecialtyController@index');
+$router->add('GET', '/admin/specialties/create', 'SpecialtyController@create');
+$router->add('POST', '/admin/specialties/store', 'SpecialtyController@store');
+$router->add('GET', '/admin/specialties/edit/{id}', 'SpecialtyController@edit');
+$router->add('POST', '/admin/specialties/update/{id}', 'SpecialtyController@update');
+$router->add('GET', '/admin/specialties/delete/{id}', 'SpecialtyController@delete');
 
 // Webhook WAHA
 $router->add('POST', '/webhook/waha', 'WebhookController@wahaReceiver');

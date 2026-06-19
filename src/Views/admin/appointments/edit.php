@@ -47,8 +47,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Procedimento ou Exame *</label>
-                        <input type="text" name="procedure_name" class="form-control" value="<?= htmlspecialchars($appointment['procedure_name']) ?>" required>
+                        <label class="form-label">Especialidade / Setor *</label>
+                        <select name="specialty_id" class="form-control" required>
+                            <option value="">-- Selecione a Especialidade --</option>
+                            <?php foreach($specialties as $spec): ?>
+                                <option value="<?= $spec['id'] ?>" <?= $spec['id'] == $appointment['specialty_id'] ? 'selected' : '' ?>><?= htmlspecialchars($spec['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">

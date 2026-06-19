@@ -11,19 +11,26 @@ class AppointmentController extends Controller {
         $this->authRequired(['admin']);
         
         $db = Database::getInstance();
-        $appointments = $db->query("
-            SELECT a.*, p.full_name as patient_name, p.main_phone, p.has_whatsapp
+        $appointmentsRaw = $db->query("
+            SELECT a.*, p.full_name as patient_name, p.main_phone, p.has_whatsapp,
+                   s.name as specialty_name, s.color_hex as specialty_color
             FROM appointments a
             JOIN patients p ON a.patient_id = p.id
-            ORDER BY a.appointment_date DESC, a.appointment_time ASC
+            LEFT JOIN specialties s ON a.specialty_id = s.id
+            ORDER BY a.appointment_date ASC, a.appointment_time ASC
         ")->fetchAll();
+
+        // Agrupar por data, e depois por especialidade para o Kanban
+        // Para simplificar o visual inicial, vamos mostrar os agendamentos "A partir de hoje" ou com filtro
+        $specialties = $db->query("SELECT * FROM specialties ORDER BY name ASC")->fetchAll();
 
         $msg = $_SESSION['msg'] ?? null;
         $msg_type = $_SESSION['msg_type'] ?? null;
         unset($_SESSION['msg'], $_SESSION['msg_type']);
 
         $this->view('admin/appointments/index', [
-            'appointments' => $appointments,
+            'appointments' => $appointmentsRaw,
+            'specialties' => $specialties,
             'msg' => $msg,
             'msg_type' => $msg_type
         ]);
@@ -34,9 +41,11 @@ class AppointmentController extends Controller {
         
         $db = Database::getInstance();
         $patients = $db->query("SELECT id, full_name, main_phone FROM patients ORDER BY full_name ASC")->fetchAll();
+        $specialties = $db->query("SELECT * FROM specialties ORDER BY name ASC")->fetchAll();
 
         $this->view('admin/appointments/create', [
-            'patients' => $patients
+            'patients' => $patients,
+            'specialties' => $specialties
         ]);
     }
 
@@ -45,11 +54,11 @@ class AppointmentController extends Controller {
         
         if ($this->isPost()) {
             $patient_id = $_POST['patient_id'] ?? null;
-            $procedure_name = $_POST['procedure_name'] ?? '';
+            $specialty_id = $_POST['specialty_id'] ?? null;
             $appointment_date = $_POST['appointment_date'] ?? '';
             $appointment_time = $_POST['appointment_time'] ?? '';
             
-            if (!$patient_id || !$procedure_name || !$appointment_date || !$appointment_time) {
+            if (!$patient_id || !$specialty_id || !$appointment_date || !$appointment_time) {
                 $_SESSION['msg'] = 'Todos os campos são obrigatórios.';
                 $_SESSION['msg_type'] = 'error';
                 $this->redirect('/admin/appointments/create');
@@ -57,13 +66,20 @@ class AppointmentController extends Controller {
 
             try {
                 $db = Database::getInstance();
+                
+                // Pega o nome da especialidade para salvar no procedure_name
+                $stmtSpec = $db->prepare("SELECT name FROM specialties WHERE id = ?");
+                $stmtSpec->execute([$specialty_id]);
+                $specName = $stmtSpec->fetchColumn() ?: 'Geral';
+
                 $stmt = $db->prepare("
-                    INSERT INTO appointments (patient_id, procedure_name, appointment_date, appointment_time, status)
-                    VALUES (:patient_id, :procedure_name, :appointment_date, :appointment_time, 'agendado')
+                    INSERT INTO appointments (patient_id, specialty_id, procedure_name, appointment_date, appointment_time, status)
+                    VALUES (:patient_id, :specialty_id, :procedure_name, :appointment_date, :appointment_time, 'agendado')
                 ");
                 $stmt->execute([
                     'patient_id' => $patient_id,
-                    'procedure_name' => $procedure_name,
+                    'specialty_id' => $specialty_id,
+                    'procedure_name' => $specName,
                     'appointment_date' => $appointment_date,
                     'appointment_time' => $appointment_time
                 ]);
@@ -95,10 +111,12 @@ class AppointmentController extends Controller {
         }
 
         $patients = $db->query("SELECT id, full_name, main_phone FROM patients ORDER BY full_name ASC")->fetchAll();
+        $specialties = $db->query("SELECT * FROM specialties ORDER BY name ASC")->fetchAll();
 
         $this->view('admin/appointments/edit', [
             'appointment' => $appointment,
-            'patients' => $patients
+            'patients' => $patients,
+            'specialties' => $specialties
         ]);
     }
 
@@ -107,16 +125,22 @@ class AppointmentController extends Controller {
         
         if ($this->isPost()) {
             $patient_id = $_POST['patient_id'] ?? null;
-            $procedure_name = $_POST['procedure_name'] ?? '';
+            $specialty_id = $_POST['specialty_id'] ?? null;
             $appointment_date = $_POST['appointment_date'] ?? '';
             $appointment_time = $_POST['appointment_time'] ?? '';
             $status = $_POST['status'] ?? 'agendado';
             
             try {
                 $db = Database::getInstance();
+                
+                $stmtSpec = $db->prepare("SELECT name FROM specialties WHERE id = ?");
+                $stmtSpec->execute([$specialty_id]);
+                $specName = $stmtSpec->fetchColumn() ?: 'Geral';
+
                 $stmt = $db->prepare("
                     UPDATE appointments 
                     SET patient_id = :patient_id, 
+                        specialty_id = :specialty_id,
                         procedure_name = :procedure_name, 
                         appointment_date = :appointment_date, 
                         appointment_time = :appointment_time, 
@@ -125,7 +149,8 @@ class AppointmentController extends Controller {
                 ");
                 $stmt->execute([
                     'patient_id' => $patient_id,
-                    'procedure_name' => $procedure_name,
+                    'specialty_id' => $specialty_id,
+                    'procedure_name' => $specName,
                     'appointment_date' => $appointment_date,
                     'appointment_time' => $appointment_time,
                     'status' => $status,
