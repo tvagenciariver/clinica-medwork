@@ -5,6 +5,15 @@ use Core\Database;
 
 class WahaApiService {
     
+    public static function formatBrazilianPhone($phone) {
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        // Se for 11 dígitos (ex: 87 988177877) e o terceiro dígito for '9', remove o 9 (para ficar 10 dígitos)
+        if (strlen($cleanPhone) === 11 && substr($cleanPhone, 2, 1) === '9') {
+            $cleanPhone = substr($cleanPhone, 0, 2) . substr($cleanPhone, 3);
+        }
+        return $cleanPhone;
+    }
+
     public static function sendMessage($examId, $recipientType) {
         $db = Database::getInstance();
         
@@ -46,7 +55,7 @@ class WahaApiService {
         
         if ($recipientType === 'patient') {
             if (!$examData['patient_wpp']) return ['status' => 'error', 'message' => 'Paciente não possui WhatsApp marcado.'];
-            $phone = preg_replace('/[^0-9]/', '', $examData['patient_phone']);
+            $phone = self::formatBrazilianPhone($examData['patient_phone']);
             
             // Substituição no template
             $messageText = str_replace(
@@ -57,7 +66,7 @@ class WahaApiService {
         } elseif ($recipientType === 'company') {
             if (!$examData['company_id']) return ['status' => 'error', 'message' => 'Exame não possui empresa vinculada.'];
             if (!$examData['company_wpp']) return ['status' => 'error', 'message' => 'Empresa não possui WhatsApp marcado.'];
-            $phone = preg_replace('/[^0-9]/', '', $examData['company_phone']);
+            $phone = self::formatBrazilianPhone($examData['company_phone']);
             
             // Substituição no template
             $messageText = str_replace(
@@ -150,7 +159,7 @@ class WahaApiService {
         $wahaSession = $settings['waha_session'] ?? 'default';
         $template = $settings['waha_template_appointment'] ?? "Olá, {paciente}. Você tem uma consulta de {procedimento} agendada para {data} às {hora} na {clinica}. Responda SIM para confirmar ou NÃO para cancelar.";
 
-        $phone = preg_replace('/[^0-9]/', '', $data['patient_phone']);
+        $phone = self::formatBrazilianPhone($data['patient_phone']);
         
         $messageText = str_replace(
             ['{paciente}', '{procedimento}', '{data}', '{hora}', '{clinica}'],
@@ -209,7 +218,7 @@ class WahaApiService {
         $wahaSession = $settings['waha_session'] ?? 'default';
 
         $payload = json_encode([
-            'chatId' => $phone . "@c.us",
+            'chatId' => "55" . $phone . "@c.us",
             'text' => $message,
             'session' => $wahaSession
         ]);
@@ -243,7 +252,7 @@ class WahaApiService {
             return false;
         }
 
-        $phone = preg_replace('/[^0-9]/', '', $data['patient_phone']);
+        $phone = self::formatBrazilianPhone($data['patient_phone']);
         $proc = $data['procedure_name'];
         $dt = date('d/m/Y', strtotime($data['appointment_date']));
         $hr = date('H:i', strtotime($data['appointment_time']));
