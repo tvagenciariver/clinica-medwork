@@ -10,6 +10,9 @@
         <a href="<?= BASE_URL ?>/admin/exams" class="nav-item">
             <i class="fa-solid fa-file-medical"></i> Exames
         </a>
+        <a href="<?= BASE_URL ?>/admin/appointments" class="nav-item">
+            <i class="fa-solid fa-calendar-check"></i> Agenda
+        </a>
         <a href="<?= BASE_URL ?>/admin/patients" class="nav-item">
             <i class="fa-solid fa-users"></i> Pacientes
         </a>

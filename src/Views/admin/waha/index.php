@@ -51,6 +51,14 @@
                         </div>
                     </div>
 
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label">Template Mensagem para Agendamentos (Usado ao confirmar consultas)</label>
+                        <small style="color: var(--text-muted); display: block; margin-bottom: 0.5rem;">
+                            Variáveis: <code>{paciente}</code>, <code>{procedimento}</code>, <code>{data}</code>, <code>{hora}</code>, <code>{clinica}</code>
+                        </small>
+                        <textarea name="waha_template_appointment" class="form-control" rows="3" required><?= htmlspecialchars($settings['waha_template_appointment'] ?? "Olá, {paciente}. Você tem uma consulta de {procedimento} agendada para {data} às {hora} na {clinica}. Responda SIM para confirmar ou NÃO para cancelar.") ?></textarea>
+                    </div>
+
                     <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border);">
 
                     <h3 style="margin-bottom: 1rem; color: var(--primary);">Modelos de Mensagem (Templates)</h3>

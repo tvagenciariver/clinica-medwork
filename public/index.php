@@ -15,10 +15,23 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// TEMPORARY DB MIGRATION: expand file_path column
+// TEMPORARY DB MIGRATION: expand file_path column and create appointments table
 try {
     $db = \Core\Database::getInstance();
     $db->query("ALTER TABLE exams MODIFY file_path TEXT");
+    
+    // Create appointments table
+    $db->query("CREATE TABLE IF NOT EXISTS appointments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        patient_id INT NOT NULL,
+        procedure_name VARCHAR(150) NOT NULL,
+        appointment_date DATE NOT NULL,
+        appointment_time TIME NOT NULL,
+        status ENUM('agendado', 'confirmado', 'cancelado', 'atendido', 'faltou') DEFAULT 'agendado',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    )");
 } catch (\Throwable $e) {
     // ignore if already done or errors
 }
@@ -68,6 +81,17 @@ $router->add('GET', '/admin/logs', 'LogController@index');
 // Painel WAHA
 $router->add('GET', '/admin/waha', 'WahaController@index');
 $router->add('POST', '/admin/waha/store', 'WahaController@store');
+
+// Agendamentos
+$router->add('GET', '/admin/appointments', 'AppointmentController@index');
+$router->add('GET', '/admin/appointments/create', 'AppointmentController@create');
+$router->add('POST', '/admin/appointments/store', 'AppointmentController@store');
+$router->add('GET', '/admin/appointments/edit/{id}', 'AppointmentController@edit');
+$router->add('POST', '/admin/appointments/update/{id}', 'AppointmentController@update');
+$router->add('GET', '/admin/appointments/sendConfirmations', 'AppointmentController@sendConfirmations');
+
+// Webhook WAHA
+$router->add('POST', '/webhook/waha', 'WebhookController@wahaReceiver');
 
 // Dispatch!
 // Pega o caminho relativo à pasta onde o script está rodando

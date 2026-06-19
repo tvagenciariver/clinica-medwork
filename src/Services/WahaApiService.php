@@ -118,4 +118,112 @@ class WahaApiService {
             return ['status' => 'error', 'message' => 'Erro na API do WhatsApp. Verifique os logs.'];
         }
     }
+
+    public static function sendAppointmentConfirmation($appointmentId) {
+        $db = Database::getInstance();
+        
+        $appt = $db->prepare("
+            SELECT a.*, p.full_name as patient_name, p.main_phone as patient_phone, p.has_whatsapp as patient_wpp
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.id
+            WHERE a.id = :id
+        ");
+        $appt->execute(['id' => $appointmentId]);
+        $data = $appt->fetch();
+
+        if (!$data) {
+            return ['status' => 'error', 'message' => 'Agendamento não encontrado.'];
+        }
+
+        if (!$data['patient_wpp']) {
+            return ['status' => 'error', 'message' => 'Paciente não possui WhatsApp.'];
+        }
+
+        $settingsRaw = $db->query("SELECT * FROM settings")->fetchAll();
+        $settings = [];
+        foreach($settingsRaw as $row) {
+            $settings[$row['setting_key']] = $row['setting_value'];
+        }
+
+        $wahaUrl = $settings['waha_base_url'] ?? 'http://localhost:3000';
+        $wahaKey = $settings['waha_api_key'] ?? '';
+        $wahaSession = $settings['waha_session'] ?? 'default';
+        $template = $settings['waha_template_appointment'] ?? "Olá, {paciente}. Você tem uma consulta de {procedimento} agendada para {data} às {hora} na {clinica}. Responda SIM para confirmar ou NÃO para cancelar.";
+
+        $phone = preg_replace('/[^0-9]/', '', $data['patient_phone']);
+        
+        $messageText = str_replace(
+            ['{paciente}', '{procedimento}', '{data}', '{hora}', '{clinica}'],
+            [$data['patient_name'], $data['procedure_name'], date('d/m/Y', strtotime($data['appointment_date'])), date('H:i', strtotime($data['appointment_time'])), 'MedWork'],
+            $template
+        );
+
+        $payload = json_encode([
+            'chatId' => "55" . $phone . "@c.us",
+            'text' => $messageText,
+            'session' => $wahaSession
+        ]);
+
+        $ch = curl_init($wahaUrl . '/api/sendText');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'X-Api-Key: ' . $wahaKey
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $logStatus = ($httpCode == 200 || $httpCode == 201) ? 'success' : 'error';
+        
+        $stmtLog = $db->prepare("
+            INSERT INTO message_logs (patient_id, recipient_type, destination_phone, message_sent, status, api_response, sent_by)
+            VALUES (:patient_id, 'patient', :destination_phone, :message_sent, :status, :api_response, :sent_by)
+        ");
+        
+        $stmtLog->execute([
+            'patient_id' => $data['patient_id'],
+            'destination_phone' => $phone,
+            'message_sent' => $messageText,
+            'status' => $logStatus,
+            'api_response' => $response,
+            'sent_by' => $_SESSION['user_id'] ?? null
+        ]);
+
+        return ['status' => $logStatus];
+    }
+
+    public static function sendDirectMessage($phone, $message) {
+        $db = Database::getInstance();
+        $settingsRaw = $db->query("SELECT * FROM settings")->fetchAll();
+        $settings = [];
+        foreach($settingsRaw as $row) {
+            $settings[$row['setting_key']] = $row['setting_value'];
+        }
+
+        $wahaUrl = $settings['waha_base_url'] ?? 'http://localhost:3000';
+        $wahaKey = $settings['waha_api_key'] ?? '';
+        $wahaSession = $settings['waha_session'] ?? 'default';
+
+        $payload = json_encode([
+            'chatId' => $phone . "@c.us",
+            'text' => $message,
+            'session' => $wahaSession
+        ]);
+
+        $ch = curl_init($wahaUrl . '/api/sendText');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'X-Api-Key: ' . $wahaKey
+        ]);
+
+        curl_exec($ch);
+        curl_close($ch);
+    }
 }

@@ -38,7 +38,8 @@ class WahaController extends Controller {
                 'waha_api_key',
                 'waha_session',
                 'waha_template_patient',
-                'waha_template_company'
+                'waha_template_company',
+                'waha_template_appointment'
             ];
 
             try {
