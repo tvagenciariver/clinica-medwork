@@ -52,8 +52,8 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Inserir usuário administrador padrão (senha: admin123)
 INSERT INTO users (name, email, password, role) 
-VALUES ('Administrador Master', 'admin@clinica.com.br', '$2y$10$Y14/2Z80I5gN6aQ4iO6k0OSlS18H1x/p6B./z6p.Qx586Y/8y.942', 'admin')
-ON DUPLICATE KEY UPDATE id=id;
+VALUES ('Administrador Master', 'admin@clinica.com.br', '$2y$10$w0ldXxahcAkU22BTYCSzkODqJFXIQ0J2FHugHqxkYP8aCT3PAKxza', 'admin')
+ON DUPLICATE KEY UPDATE password=VALUES(password);
 
 -- Criação da tabela exams
 CREATE TABLE IF NOT EXISTS exams (
