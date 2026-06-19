@@ -108,6 +108,7 @@ class ExamController extends Controller {
             
             // Tratamento de Upload Múltiplo
             $file_paths = [];
+            $uploadErrors = [];
             if (isset($_FILES['exam_files']) && is_array($_FILES['exam_files']['name'])) {
                 $uploadDir = __DIR__ . '/../../public/uploads/';
                 if (!is_dir($uploadDir)) {
@@ -123,6 +124,8 @@ class ExamController extends Controller {
                         if (move_uploaded_file($_FILES['exam_files']['tmp_name'][$i], $uploadDir . $fileName)) {
                             $file_paths[] = 'uploads/' . $fileName;
                         }
+                    } else if ($_FILES['exam_files']['error'][$i] !== UPLOAD_ERR_NO_FILE) {
+                        $uploadErrors[] = "Erro no arquivo " . $_FILES['exam_files']['name'][$i] . " (Código PHP: " . $_FILES['exam_files']['error'][$i] . ")";
                     }
                 }
             }
@@ -149,8 +152,14 @@ class ExamController extends Controller {
                     'created_by' => $_SESSION['user_id']
                 ]);
                 
-                $_SESSION['msg'] = 'Exame cadastrado com sucesso! Protocolo: ' . $protocol_code;
-                $_SESSION['msg_type'] = 'success';
+                $msg = 'Exame cadastrado com sucesso! Protocolo: ' . $protocol_code;
+                if (!empty($uploadErrors)) {
+                    $msg .= ' AVISO: Alguns arquivos não foram salvos: ' . implode(' | ', $uploadErrors);
+                    $_SESSION['msg_type'] = 'warning';
+                } else {
+                    $_SESSION['msg_type'] = 'success';
+                }
+                $_SESSION['msg'] = $msg;
                 $this->redirect('/admin/exams');
             } catch (\PDOException $e) {
                 $_SESSION['msg'] = 'Erro ao salvar exame: ' . $e->getMessage();
@@ -238,6 +247,7 @@ class ExamController extends Controller {
             
             // Process new file upload if provided
             $hasNewFiles = false;
+            $uploadErrors = [];
             
             if (isset($_FILES['exam_files']) && is_array($_FILES['exam_files']['name']) && !empty($_FILES['exam_files']['name'][0])) {
                 $hasNewFiles = true;
@@ -255,6 +265,8 @@ class ExamController extends Controller {
                         if (move_uploaded_file($_FILES['exam_files']['tmp_name'][$i], $uploadDir . $fileName)) {
                             $remaining_paths[] = 'uploads/' . $fileName; // APPEND new files
                         }
+                    } else if ($_FILES['exam_files']['error'][$i] !== UPLOAD_ERR_NO_FILE) {
+                        $uploadErrors[] = "Erro no arquivo " . $_FILES['exam_files']['name'][$i] . " (Código de erro do PHP: " . $_FILES['exam_files']['error'][$i] . "). Talvez seja muito grande.";
                     }
                 }
             }
@@ -285,8 +297,14 @@ class ExamController extends Controller {
                     'id' => $id
                 ]);
                 
-                $_SESSION['msg'] = 'Exame atualizado com sucesso!';
-                $_SESSION['msg_type'] = 'success';
+                $msg = 'Exame atualizado com sucesso!';
+                if (!empty($uploadErrors)) {
+                    $msg .= ' AVISO: ' . implode(' | ', $uploadErrors);
+                    $_SESSION['msg_type'] = 'warning';
+                } else {
+                    $_SESSION['msg_type'] = 'success';
+                }
+                $_SESSION['msg'] = $msg;
                 $this->redirect('/admin/exams');
             } catch (\PDOException $e) {
                 $_SESSION['msg'] = 'Erro ao atualizar exame: ' . $e->getMessage();

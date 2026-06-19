@@ -52,18 +52,24 @@
         $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
     ?>
         <div style="width: 100%; max-width: 1200px; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-            <div style="width: 100%; display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <div style="width: 100%; display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem;">
                 <?php if ($isImage): ?>
-                    <button onclick="toggleZoom('img-<?= $index ?>')" class="btn btn-secondary btn-sm" title="Clique para dar Zoom">
-                        <i class="fa-solid fa-magnifying-glass-plus"></i> Zoom na Imagem
-                    </button>
+                    <div style="display: flex; align-items: center; background: #f1f5f9; border-radius: 6px; padding: 0.25rem; border: 1px solid #cbd5e1;">
+                        <button onclick="changeZoom('img-<?= $index ?>', -0.5)" class="btn btn-sm" style="background: transparent; color: #333; padding: 0.25rem 0.5rem;" title="Reduzir">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <span id="zoom-level-img-<?= $index ?>" style="font-size: 0.85rem; font-weight: 600; min-width: 40px; text-align: center; display: inline-block;">1x</span>
+                        <button onclick="changeZoom('img-<?= $index ?>', 0.5)" class="btn btn-sm" style="background: transparent; color: #333; padding: 0.25rem 0.5rem;" title="Ampliar">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
                 <?php endif; ?>
                 <a href="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" download class="btn btn-primary btn-sm"><i class="fa-solid fa-download"></i> Baixar Arquivo <?= count($paths) > 1 ? ($index + 1) : '' ?></a>
             </div>
             
             <?php if ($isImage): ?>
-                <div style="width: 100%; overflow: auto; text-align: center; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #fff;">
-                    <img id="img-<?= $index ?>" src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="max-width: 100%; height: auto; cursor: zoom-in; transition: all 0.3s ease;">
+                <div style="width: 100%; overflow: auto; text-align: center; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #fff; max-height: 80vh;">
+                    <img id="img-<?= $index ?>" src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="max-width: 100%; transition: transform 0.2s ease; transform-origin: top center;" data-zoom="1">
                 </div>
             <?php else: ?>
                 <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="width: 100%; height: 800px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>
@@ -82,21 +88,41 @@
 </main>
 
 <script>
-function toggleZoom(imgId) {
+function changeZoom(imgId, delta) {
     var img = document.getElementById(imgId);
-    if (img.style.maxWidth === '100%') {
+    var label = document.getElementById('zoom-level-' + imgId);
+    if (!img || !label) return;
+
+    var currentZoom = parseFloat(img.getAttribute('data-zoom')) || 1;
+    var newZoom = currentZoom + delta;
+    
+    // Limites de zoom: 0.5x até 5x
+    if (newZoom < 0.5) newZoom = 0.5;
+    if (newZoom > 5) newZoom = 5;
+    
+    img.setAttribute('data-zoom', newZoom);
+    label.innerText = newZoom + 'x';
+    
+    // Se o zoom for maior que 1, precisamos permitir que a imagem cresça além do container
+    if (newZoom > 1) {
         img.style.maxWidth = 'none';
-        img.style.cursor = 'zoom-out';
     } else {
         img.style.maxWidth = '100%';
-        img.style.cursor = 'zoom-in';
     }
+    
+    img.style.transform = 'scale(' + newZoom + ')';
 }
 
-// Add click listener to image directly too
+// Suporte para zoom com dois cliques na imagem
 document.querySelectorAll('img[id^="img-"]').forEach(function(img) {
-    img.addEventListener('click', function() {
-        toggleZoom(this.id);
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('dblclick', function() {
+        var currentZoom = parseFloat(this.getAttribute('data-zoom')) || 1;
+        if (currentZoom >= 2) {
+            changeZoom(this.id, 1 - currentZoom); // reseta para 1x
+        } else {
+            changeZoom(this.id, 1); // incrementa em 1x
+        }
     });
 });
 </script>
