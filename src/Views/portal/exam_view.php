@@ -68,8 +68,8 @@
             </div>
             
             <?php if ($isImage): ?>
-                <div style="width: 100%; overflow: auto; text-align: center; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #fff; max-height: 80vh;">
-                    <img id="img-<?= $index ?>" src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="max-width: 100%; transition: transform 0.2s ease; transform-origin: top center;" data-zoom="1">
+                <div class="drag-container" id="drag-container-<?= $index ?>" style="width: 100%; overflow: auto; text-align: center; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #fff; max-height: 80vh; cursor: grab;">
+                    <img id="img-<?= $index ?>" src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="max-width: 100%; transition: transform 0.2s ease; transform-origin: top center; pointer-events: none;" data-zoom="1">
                 </div>
             <?php else: ?>
                 <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="width: 100%; height: 800px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>
@@ -113,15 +113,54 @@ function changeZoom(imgId, delta) {
     img.style.transform = 'scale(' + newZoom + ')';
 }
 
-// Suporte para zoom com dois cliques na imagem
-document.querySelectorAll('img[id^="img-"]').forEach(function(img) {
-    img.style.cursor = 'zoom-in';
-    img.addEventListener('dblclick', function() {
-        var currentZoom = parseFloat(this.getAttribute('data-zoom')) || 1;
-        if (currentZoom >= 2) {
-            changeZoom(this.id, 1 - currentZoom); // reseta para 1x
-        } else {
-            changeZoom(this.id, 1); // incrementa em 1x
+// Suporte para arrastar (pan) a imagem e clique duplo
+document.querySelectorAll('.drag-container').forEach(function(slider) {
+    let isDown = false;
+    let startX;
+    let startY;
+    let scrollLeft;
+    let scrollTop;
+
+    slider.addEventListener('mousedown', (e) => {
+        isDown = true;
+        slider.style.cursor = 'grabbing';
+        startX = e.pageX - slider.offsetLeft;
+        startY = e.pageY - slider.offsetTop;
+        scrollLeft = slider.scrollLeft;
+        scrollTop = slider.scrollTop;
+    });
+
+    slider.addEventListener('mouseleave', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+
+    slider.addEventListener('mouseup', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+
+    slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        const y = e.pageY - slider.offsetTop;
+        const walkX = (x - startX) * 2; // Velocidade de arraste
+        const walkY = (y - startY) * 2;
+        slider.scrollLeft = scrollLeft - walkX;
+        slider.scrollTop = scrollTop - walkY;
+    });
+
+    // Clique duplo para resetar zoom (pegando o ID da imagem filha)
+    slider.addEventListener('dblclick', function() {
+        var img = this.querySelector('img');
+        if (img) {
+            var currentZoom = parseFloat(img.getAttribute('data-zoom')) || 1;
+            if (currentZoom >= 2) {
+                changeZoom(img.id, 1 - currentZoom); // reseta para 1x
+            } else {
+                changeZoom(img.id, 1); // incrementa em 1x
+            }
         }
     });
 });
