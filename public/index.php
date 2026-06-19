@@ -37,6 +37,8 @@ $router->add('POST', '/admin/patients/store', 'PatientController@store');
 $router->add('GET', '/admin/companies', 'CompanyController@index');
 $router->add('GET', '/admin/companies/create', 'CompanyController@create');
 $router->add('POST', '/admin/companies/store', 'CompanyController@store');
+$router->add('GET', '/admin/companies/edit/{id}', 'CompanyController@edit');
+$router->add('POST', '/admin/companies/update/{id}', 'CompanyController@update');
 
 // Exames
 $router->add('GET', '/admin/exams', 'ExamController@index');

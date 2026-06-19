@@ -42,6 +42,7 @@
                                 <th>Telefone</th>
                                 <th>WhatsApp</th>
                                 <th>Status</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -65,11 +66,14 @@
                                         <span class="badge badge-danger">Inativa</span>
                                     <?php endif; ?>
                                 </td>
+                                <td>
+                                    <a href="<?= BASE_URL ?>/admin/companies/edit/<?= $c['id'] ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-pen"></i> Editar</a>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                             <?php if(empty($companies)): ?>
                                 <tr>
-                                    <td colspan="6" style="text-align: center;">Nenhuma empresa cadastrada.</td>
+                                    <td colspan="7" style="text-align: center;">Nenhuma empresa cadastrada.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
