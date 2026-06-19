@@ -7,14 +7,6 @@ session_start();
 // Configurações e requires base (substituindo composer autoload por algo simples)
 require_once __DIR__ . '/../config/database.php';
 
-// TEMPORARY DB MIGRATION: expand file_path column
-try {
-    $db = \Core\Database::getInstance();
-    $db->query("ALTER TABLE exams MODIFY file_path TEXT");
-} catch (\Exception $e) {
-    // ignore if already done or errors
-}
-
 // Autoloader simples
 spl_autoload_register(function ($class) {
     $file = __DIR__ . '/../src/' . str_replace('\\', '/', $class) . '.php';
@@ -22,6 +14,14 @@ spl_autoload_register(function ($class) {
         require_once $file;
     }
 });
+
+// TEMPORARY DB MIGRATION: expand file_path column
+try {
+    $db = \Core\Database::getInstance();
+    $db->query("ALTER TABLE exams MODIFY file_path TEXT");
+} catch (\Throwable $e) {
+    // ignore if already done or errors
+}
 
 // Instancia Roteador
 $router = new \Core\Router();
