@@ -89,15 +89,38 @@
                         <input type="text" name="responsible_doctor" class="form-control" value="<?= htmlspecialchars($exam['responsible_doctor'] ?? '') ?>">
                     </div>
 
+                    <?php
+                        $current_paths = [];
+                        if (!empty($exam['file_path'])) {
+                            $decoded = json_decode($exam['file_path'], true);
+                            $current_paths = is_array($decoded) ? $decoded : [$exam['file_path']];
+                        }
+                    ?>
+
+                    <?php if(!empty($current_paths)): ?>
+                    <div class="form-group" style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <label class="form-label" style="margin-bottom: 0.5rem;">Arquivos Atuais (<?= count($current_paths) ?>)</label>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <?php foreach($current_paths as $index => $path): ?>
+                                <div style="display: flex; align-items: center; justify-content: space-between; background: white; padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                                    <a href="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                                        <i class="fa-solid fa-file"></i> Arquivo <?= $index + 1 ?>
+                                    </a>
+                                    <label style="color: #ef4444; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+                                        <input type="checkbox" name="delete_files[]" value="<?= $index ?>"> 
+                                        <i class="fa-solid fa-trash"></i> Excluir
+                                    </label>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <div class="form-group">
-                        <label class="form-label">Substituir Arquivo(s) do Exame</label>
+                        <label class="form-label">Adicionar Novos Arquivos</label>
                         <input type="file" name="exam_files[]" class="form-control" accept=".pdf,image/*" multiple>
                         <small style="color: #64748b; margin-top: 0.5rem; display: block;">
-                            <?php if(!empty($exam['file_path'])): ?>
-                                O exame já possui arquivo(s) anexado(s). Se você enviar novos arquivos, os antigos serão <strong>substituídos</strong>. Se não quiser alterar, deixe em branco.
-                            <?php else: ?>
-                                Nenhum arquivo anexado no momento.
-                            <?php endif; ?>
+                            Você pode selecionar múltiplos arquivos (PDF ou Imagens). Eles serão <strong>adicionados</strong> aos arquivos que já existem neste exame.
                         </small>
                     </div>
 

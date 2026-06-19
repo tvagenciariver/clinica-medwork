@@ -210,8 +210,33 @@ class ExamController extends Controller {
             $allow_whatsapp = isset($_POST['allow_whatsapp']) ? 1 : 0;
             $status = $_POST['status'] ?? $exam['status'];
             
-            // Process file upload if provided
-            $file_paths = [];
+            // Parse existing paths
+            $existing_paths = [];
+            if (!empty($exam['file_path'])) {
+                $decoded = json_decode($exam['file_path'], true);
+                $existing_paths = is_array($decoded) ? $decoded : [$exam['file_path']];
+            }
+
+            // Handle deletions
+            $delete_indexes = $_POST['delete_files'] ?? [];
+            if (!is_array($delete_indexes)) {
+                $delete_indexes = [$delete_indexes];
+            }
+            
+            // Delete physically and remove from array
+            $remaining_paths = [];
+            foreach ($existing_paths as $idx => $path) {
+                if (in_array((string)$idx, $delete_indexes, true)) {
+                    $fullPath = __DIR__ . '/../../public/' . $path;
+                    if (file_exists($fullPath)) {
+                        unlink($fullPath);
+                    }
+                } else {
+                    $remaining_paths[] = $path;
+                }
+            }
+            
+            // Process new file upload if provided
             $hasNewFiles = false;
             
             if (isset($_FILES['exam_files']) && is_array($_FILES['exam_files']['name']) && !empty($_FILES['exam_files']['name'][0])) {
@@ -228,13 +253,14 @@ class ExamController extends Controller {
                         // Append timestamp to avoid caching issues on same name
                         $fileName = $exam['protocol_code'] . '_' . time() . '_' . $i . '.' . $ext;
                         if (move_uploaded_file($_FILES['exam_files']['tmp_name'][$i], $uploadDir . $fileName)) {
-                            $file_paths[] = 'uploads/' . $fileName;
+                            $remaining_paths[] = 'uploads/' . $fileName; // APPEND new files
                         }
                     }
                 }
             }
 
-            $file_path_db = $hasNewFiles ? json_encode($file_paths) : $exam['file_path'];
+            // Final paths array to JSON or null
+            $file_path_db = !empty($remaining_paths) ? json_encode($remaining_paths) : null;
 
             try {
                 $stmt = $db->prepare("

@@ -59,7 +59,7 @@
             <?php if ($isImage): ?>
                 <img src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" style="max-width: 100%; height: auto; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border-radius: 8px;">
             <?php else: ?>
-                <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" class="file-frame"></iframe>
+                <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($path) ?>" class="file-frame" style="width: 100%; min-height: 80vh; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>
             <?php endif; ?>
         </div>
         
