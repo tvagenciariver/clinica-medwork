@@ -13,10 +13,11 @@
         }
         .viewer-container {
             flex-grow: 1; padding: 1rem; background: #e2e8f0;
-            display: flex; justify-content: center; align-items: center;
+            display: flex; justify-content: center; align-items: flex-start;
+            overflow: auto;
         }
         .file-frame {
-            width: 100%; height: 100%; max-width: 1200px;
+            width: 100%; height: calc(100vh - 100px); max-width: 1200px;
             border: none; background: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             border-radius: 8px;
         }
@@ -38,9 +39,9 @@
 <main class="viewer-container">
     <?php
     $ext = strtolower(pathinfo($exam['file_path'], PATHINFO_EXTENSION));
-    if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])):
+    if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])):
     ?>
-        <img src="<?= BASE_URL ?>/<?= htmlspecialchars($exam['file_path']) ?>" style="max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border-radius: 8px;">
+        <img src="<?= BASE_URL ?>/<?= htmlspecialchars($exam['file_path']) ?>" style="max-width: 100%; height: auto; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border-radius: 8px; margin: auto;">
     <?php else: ?>
         <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($exam['file_path']) ?>" class="file-frame"></iframe>
     <?php endif; ?>
