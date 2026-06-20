@@ -279,4 +279,44 @@ class AppointmentController extends Controller {
             $this->redirect('/admin/appointments?date=' . $date);
         }
     }
+
+    public function updateStatusAjax($id) {
+        $this->authRequired(['admin']);
+        if ($this->isPost()) {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $status = $data['status'] ?? '';
+            $validStatuses = ['agendado', 'confirmado', 'cancelado', 'atendido', 'faltou'];
+            
+            if (!in_array($status, $validStatuses)) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Status inválido']);
+                exit;
+            }
+
+            try {
+                $db = Database::getInstance();
+                
+                // Se for cancelado, dispara Waha e cancela
+                if ($status === 'cancelado') {
+                    $stmt = $db->prepare("SELECT status FROM appointments WHERE id = ?");
+                    $stmt->execute([$id]);
+                    $appt = $stmt->fetch();
+                    if ($appt && $appt['status'] !== 'cancelado') {
+                        WahaApiService::sendCancellationNotice($id);
+                    }
+                }
+
+                $stmt = $db->prepare("UPDATE appointments SET status = :status WHERE id = :id");
+                $stmt->execute(['status' => $status, 'id' => $id]);
+                
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'success', 'message' => 'Status atualizado com sucesso']);
+                exit;
+            } catch (\Exception $e) {
+                http_response_code(500);
+                echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+                exit;
+            }
+        }
+    }
 }

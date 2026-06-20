@@ -13,10 +13,10 @@
             padding-bottom: 2rem;
             align-items: flex-start;
         }
-        /* Forçar blocos de no máximo 4 em telas grandes */
+        /* Forçar blocos de no máximo 5 em telas grandes */
         @media (min-width: 1400px) {
             .kanban-board {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(5, 1fr);
             }
         }
         .kanban-col {
@@ -26,7 +26,7 @@
             display: flex;
             flex-direction: column;
             border: 1px solid #e2e8f0;
-            max-height: calc(100vh - 200px);
+            min-height: 400px;
         }
         .kanban-header {
             padding: 1rem;
@@ -44,6 +44,11 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            min-height: 200px;
+        }
+        .kanban-body.drag-over {
+            background: #e2e8f0;
+            border-radius: 0 0 8px 8px;
         }
         .kanban-card {
             background: white;
@@ -52,6 +57,15 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border-left: 4px solid var(--primary);
             position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: grab;
+        }
+        .kanban-card:active {
+            cursor: grabbing;
+        }
+        .kanban-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
         }
         .k-card-title {
             font-weight: 600;
@@ -75,11 +89,14 @@
             padding-top: 0.5rem;
             border-top: 1px solid #f1f5f9;
         }
-        .status-badge {
+        .spec-badge {
+            display: inline-block;
             font-size: 0.75rem;
             padding: 2px 6px;
             border-radius: 4px;
-            font-weight: 500;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -128,110 +145,67 @@
             </div>
 
             <?php
-            // Organizar agendamentos por especialidade
-            $kanban = [];
-            foreach ($specialties as $spec) {
-                $kanban[$spec['id']] = [
-                    'name' => $spec['name'],
-                    'color' => $spec['color_hex'],
-                    'appointments' => []
-                ];
-            }
-            $kanban['sem_setor'] = [
-                'name' => 'Geral / Sem Setor',
-                'color' => '#64748b',
-                'appointments' => []
+            // Organizar agendamentos por Status (agendado, confirmado, atendido, faltou, cancelado)
+            $kanban = [
+                'agendado' => ['name' => 'Pendente', 'color' => '#3b82f6', 'bgCard' => 'white', 'appointments' => []],
+                'confirmado' => ['name' => 'Confirmado', 'color' => '#10b981', 'bgCard' => '#f0fdf4', 'appointments' => []],
+                'atendido' => ['name' => 'Atendido', 'color' => '#64748b', 'bgCard' => '#f1f5f9', 'appointments' => []],
+                'faltou' => ['name' => 'Faltou', 'color' => '#f59e0b', 'bgCard' => '#fef3c7', 'appointments' => []],
+                'cancelado' => ['name' => 'Cancelado', 'color' => '#ef4444', 'bgCard' => '#fee2e2', 'appointments' => []]
             ];
 
             foreach ($appointments as $appt) {
-                if ($appt['specialty_id'] && isset($kanban[$appt['specialty_id']])) {
-                    $kanban[$appt['specialty_id']]['appointments'][] = $appt;
+                $status = $appt['status'];
+                if (isset($kanban[$status])) {
+                    $kanban[$status]['appointments'][] = $appt;
                 } else {
-                    $kanban['sem_setor']['appointments'][] = $appt;
+                    $kanban['agendado']['appointments'][] = $appt; // fallback
                 }
             }
             ?>
 
             <div class="kanban-board">
-                <?php foreach($kanban as $colId => $col): ?>
-                    <?php if(empty($col['appointments']) && $colId === 'sem_setor') continue; // Oculta 'Sem setor' se estiver vazio ?>
-                    
-                    <div class="kanban-col">
+                <?php foreach($kanban as $statusKey => $col): ?>
+                    <div class="kanban-col" data-status="<?= $statusKey ?>">
                         <div class="kanban-header" style="border-bottom-color: <?= htmlspecialchars($col['color']) ?>;">
-                            <span><?= htmlspecialchars($col['name']) ?></span>
-                            <span class="badge badge-secondary"><?= count($col['appointments']) ?></span>
+                            <span style="color: <?= htmlspecialchars($col['color']) ?>;"><i class="fa-solid fa-circle" style="font-size: 0.5rem; margin-bottom: 2px; margin-right: 4px;"></i> <?= htmlspecialchars($col['name']) ?></span>
+                            <span class="badge badge-secondary count-badge"><?= count($col['appointments']) ?></span>
                         </div>
                         
-                        <div class="kanban-body">
-                            <?php if (empty($col['appointments'])): ?>
-                                <div style="text-align: center; color: #94a3b8; font-size: 0.875rem; padding: 2rem 0;">
-                                    Nenhum agendamento.
-                                </div>
-                            <?php else: ?>
-                                <?php foreach($col['appointments'] as $appt): ?>
-                                    <?php
-                                    $bgCard = 'white';
-                                    $opacity = '1';
-                                    if($appt['status'] === 'cancelado') {
-                                        $bgCard = '#fee2e2'; // vermelho clarinho
-                                        $opacity = '0.75';
-                                    } elseif($appt['status'] === 'atendido') {
-                                        $bgCard = '#f1f5f9'; // cinza clarinho
-                                        $opacity = '0.85';
-                                    } elseif($appt['status'] === 'confirmado') {
-                                        $bgCard = '#f0fdf4'; // verde clarinho
-                                    } elseif($appt['status'] === 'faltou') {
-                                        $bgCard = '#fef3c7'; // amarelo/laranja clarinho
-                                    }
-                                    ?>
-                                    <div class="kanban-card" style="border-left-color: <?= htmlspecialchars($col['color']) ?>; background: <?= $bgCard ?>; opacity: <?= $opacity ?>; transition: all 0.3s ease;">
-                                        <div class="k-card-title">
-                                            <?= htmlspecialchars($appt['patient_name']) ?>
-                                            <?php if($appt['has_whatsapp']): ?>
-                                                <i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 0.875rem;" title="Possui WhatsApp"></i>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="k-card-time">
-                                            <i class="fa-regular fa-calendar"></i> <?= date('d/m/Y', strtotime($appt['appointment_date'])) ?>
-                                            <i class="fa-regular fa-clock" style="margin-left: 0.5rem;"></i> <?= date('H:i', strtotime($appt['appointment_time'])) ?>
-                                        </div>
-                                        
-                                        <div style="margin-bottom: 0.5rem;">
-                                            <form action="<?= BASE_URL ?>/admin/appointments/updateStatus/<?= $appt['id'] ?>" method="POST" style="margin: 0;">
-                                                <input type="hidden" name="filter_date" value="<?= htmlspecialchars($filterDate ?? date('Y-m-d')) ?>">
-                                                <select name="status" onchange="this.form.submit()" class="status-badge" style="border: 1px solid rgba(0,0,0,0.1); cursor: pointer; outline: none; width: 100%; text-align: left;
-                                                <?php if($appt['status'] === 'agendado') echo 'background: #e0e7ff; color: #4338ca;'; ?>
-                                                <?php if($appt['status'] === 'confirmado') echo 'background: #dcfce7; color: #15803d; border-color: #86efac;'; ?>
-                                                <?php if($appt['status'] === 'atendido') echo 'background: #e2e8f0; color: #475569; border-color: #cbd5e1;'; ?>
-                                                <?php if($appt['status'] === 'cancelado') echo 'background: #fca5a5; color: #7f1d1d; border-color: #f87171;'; ?>
-                                                <?php if($appt['status'] === 'faltou') echo 'background: #fde68a; color: #92400e; border-color: #fcd34d;'; ?>
-                                                ">
-                                                    <option value="agendado" <?= $appt['status'] === 'agendado' ? 'selected' : '' ?>>Pendente</option>
-                                                    <option value="confirmado" <?= $appt['status'] === 'confirmado' ? 'selected' : '' ?>>Confirmado</option>
-                                                    <option value="atendido" <?= $appt['status'] === 'atendido' ? 'selected' : '' ?>>Atendido</option>
-                                                    <option value="cancelado" <?= $appt['status'] === 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
-                                                    <option value="faltou" <?= $appt['status'] === 'faltou' ? 'selected' : '' ?>>Faltou</option>
-                                                </select>
-                                            </form>
-                                        </div>
-
-                                        <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">
-                                            <strong>Proc:</strong> <?= htmlspecialchars($appt['procedure_name'] ?: 'Não especificado') ?>
-                                        </div>
-
-                                        <div class="k-card-actions">
-                                            <a href="<?= BASE_URL ?>/admin/appointments/edit/<?= $appt['id'] ?>" class="btn btn-sm btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
-                                                <i class="fa-solid fa-pen"></i> Editar
-                                            </a>
-                                            <?php if($appt['status'] !== 'cancelado'): ?>
-                                            <a href="<?= BASE_URL ?>/admin/appointments/cancel/<?= $appt['id'] ?>" class="btn btn-sm" style="background: #ef4444; color: white; padding: 4px 8px; font-size: 0.75rem;" onclick="return confirm('Deseja cancelar esta consulta e avisar via WhatsApp?');">
-                                                <i class="fa-solid fa-xmark"></i> Cancelar
-                                            </a>
-                                            <?php endif; ?>
-                                        </div>
+                        <div class="kanban-body dropzone" data-status="<?= $statusKey ?>">
+                            <?php foreach($col['appointments'] as $appt): ?>
+                                <div class="kanban-card draggable-card" draggable="true" data-id="<?= $appt['id'] ?>" style="border-left-color: <?= htmlspecialchars($col['color']) ?>; background: <?= $col['bgCard'] ?>;">
+                                    
+                                    <div class="spec-badge" style="background: <?= htmlspecialchars($appt['specialty_color'] ?: '#64748b') ?>;">
+                                        <?= htmlspecialchars($appt['specialty_name'] ?: 'Geral') ?>
                                     </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+
+                                    <div class="k-card-title">
+                                        <?= htmlspecialchars($appt['patient_name']) ?>
+                                        <?php if($appt['has_whatsapp']): ?>
+                                            <i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 0.875rem;" title="Possui WhatsApp"></i>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="k-card-time">
+                                        <i class="fa-regular fa-clock"></i> <?= date('H:i', strtotime($appt['appointment_time'])) ?>
+                                    </div>
+                                    
+                                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">
+                                        <strong>Proc:</strong> <?= htmlspecialchars($appt['procedure_name'] ?: 'Não especificado') ?>
+                                    </div>
+
+                                    <div class="k-card-actions">
+                                        <a href="<?= BASE_URL ?>/admin/appointments/edit/<?= $appt['id'] ?>" class="btn btn-sm btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+                                            <i class="fa-solid fa-pen"></i> Editar
+                                        </a>
+                                        <?php if($statusKey !== 'cancelado'): ?>
+                                        <a href="<?= BASE_URL ?>/admin/appointments/cancel/<?= $appt['id'] ?>" class="btn btn-sm" style="background: #ef4444; color: white; padding: 4px 8px; font-size: 0.75rem;" onclick="return confirm('Deseja cancelar esta consulta e avisar via WhatsApp?');">
+                                            <i class="fa-solid fa-xmark"></i> Cancela
+                                        </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -242,6 +216,94 @@
 </div>
 
 <script>
+// --- DRAG AND DROP KANBAN ---
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.draggable-card');
+    const dropzones = document.querySelectorAll('.dropzone');
+
+    cards.forEach(card => {
+        card.addEventListener('dragstart', () => {
+            card.classList.add('dragging');
+        });
+
+        card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+        });
+    });
+
+    dropzones.forEach(zone => {
+        zone.addEventListener('dragover', e => {
+            e.preventDefault(); // Necessário para permitir o drop
+            zone.classList.add('drag-over');
+            const draggingCard = document.querySelector('.dragging');
+            zone.appendChild(draggingCard);
+        });
+
+        zone.addEventListener('dragleave', e => {
+            zone.classList.remove('drag-over');
+        });
+
+        zone.addEventListener('drop', async e => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const draggingCard = document.querySelector('.dragging');
+            
+            if (draggingCard) {
+                const newStatus = zone.getAttribute('data-status');
+                const cardId = draggingCard.getAttribute('data-id');
+                const colData = getKanbanColConfig(newStatus);
+                
+                // Atualiza cor e fundo na hora
+                draggingCard.style.borderLeftColor = colData.color;
+                draggingCard.style.background = colData.bgCard;
+                
+                if (newStatus === 'cancelado') {
+                    // Se moveu para cancelado, remove o botão de cancelar
+                    const cancelBtn = draggingCard.querySelector('.k-card-actions .btn[style*="background: #ef4444"]');
+                    if(cancelBtn) cancelBtn.remove();
+                }
+
+                // Atualiza contadores
+                updateCounters();
+
+                // Fazer a requisição silenciosa pro servidor
+                try {
+                    let res = await fetch('<?= BASE_URL ?>/admin/appointments/updateStatusAjax/' + cardId, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    let data = await res.json();
+                    if(data.status !== 'success') {
+                        alert("Erro ao salvar o status: " + data.message);
+                    }
+                } catch(error) {
+                    console.error("Fetch error: ", error);
+                }
+            }
+        });
+    });
+
+    function getKanbanColConfig(status) {
+        const configs = {
+            'agendado': { color: '#3b82f6', bgCard: 'white' },
+            'confirmado': { color: '#10b981', bgCard: '#f0fdf4' },
+            'atendido': { color: '#64748b', bgCard: '#f1f5f9' },
+            'faltou': { color: '#f59e0b', bgCard: '#fef3c7' },
+            'cancelado': { color: '#ef4444', bgCard: '#fee2e2' }
+        };
+        return configs[status] || configs['agendado'];
+    }
+
+    function updateCounters() {
+        document.querySelectorAll('.kanban-col').forEach(col => {
+            const count = col.querySelectorAll('.draggable-card').length;
+            col.querySelector('.count-badge').textContent = count;
+        });
+    }
+});
+
+// --- DISPARO EM LOTE ---
 async function startWahaQueue() {
     if(!confirm('Isso enviará uma mensagem no WhatsApp para TODOS os pacientes com agendamento para AMANHÃ que ainda não confirmaram. Será feito de forma cadenciada para evitar bloqueios. Deseja continuar?')) {
         return;
@@ -285,7 +347,7 @@ async function startWahaQueue() {
             else erros++;
 
             if(i < ids.length - 1) {
-                // Intervalo aleatório entre 4 e 9 segundos para parecer humano
+                // Intervalo aleatório entre 4 e 9 segundos
                 let delay = Math.floor(Math.random() * 5000) + 4000;
                 statusText.innerText = `Aguardando ${Math.round(delay/1000)}s (proteção anti-spam)...`;
                 await new Promise(r => setTimeout(r, delay));

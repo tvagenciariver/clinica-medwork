@@ -116,6 +116,7 @@ $router->add('POST', '/admin/appointments/store', 'AppointmentController@store')
 $router->add('GET', '/admin/appointments/edit/{id}', 'AppointmentController@edit');
 $router->add('POST', '/admin/appointments/update/{id}', 'AppointmentController@update');
 $router->add('POST', '/admin/appointments/updateStatus/{id}', 'AppointmentController@updateStatus');
+$router->add('POST', '/admin/appointments/updateStatusAjax/{id}', 'AppointmentController@updateStatusAjax');
 $router->add('GET', '/admin/appointments/getTomorrowIds', 'AppointmentController@getTomorrowIds');
 $router->add('POST', '/admin/appointments/sendSingle', 'AppointmentController@sendSingle');
 $router->add('GET', '/admin/appointments/cancel/{id}', 'AppointmentController@cancel');
