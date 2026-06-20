@@ -169,7 +169,22 @@
                                 </div>
                             <?php else: ?>
                                 <?php foreach($col['appointments'] as $appt): ?>
-                                    <div class="kanban-card" style="border-left-color: <?= htmlspecialchars($col['color']) ?>;">
+                                    <?php
+                                    $bgCard = 'white';
+                                    $opacity = '1';
+                                    if($appt['status'] === 'cancelado') {
+                                        $bgCard = '#fee2e2'; // vermelho clarinho
+                                        $opacity = '0.75';
+                                    } elseif($appt['status'] === 'atendido') {
+                                        $bgCard = '#f1f5f9'; // cinza clarinho
+                                        $opacity = '0.85';
+                                    } elseif($appt['status'] === 'confirmado') {
+                                        $bgCard = '#f0fdf4'; // verde clarinho
+                                    } elseif($appt['status'] === 'faltou') {
+                                        $bgCard = '#fef3c7'; // amarelo/laranja clarinho
+                                    }
+                                    ?>
+                                    <div class="kanban-card" style="border-left-color: <?= htmlspecialchars($col['color']) ?>; background: <?= $bgCard ?>; opacity: <?= $opacity ?>; transition: all 0.3s ease;">
                                         <div class="k-card-title">
                                             <?= htmlspecialchars($appt['patient_name']) ?>
                                             <?php if($appt['has_whatsapp']): ?>
@@ -184,12 +199,12 @@
                                         <div style="margin-bottom: 0.5rem;">
                                             <form action="<?= BASE_URL ?>/admin/appointments/updateStatus/<?= $appt['id'] ?>" method="POST" style="margin: 0;">
                                                 <input type="hidden" name="filter_date" value="<?= htmlspecialchars($filterDate ?? date('Y-m-d')) ?>">
-                                                <select name="status" onchange="this.form.submit()" class="status-badge" style="border: none; cursor: pointer; outline: none; width: 100%; text-align: left;
+                                                <select name="status" onchange="this.form.submit()" class="status-badge" style="border: 1px solid rgba(0,0,0,0.1); cursor: pointer; outline: none; width: 100%; text-align: left;
                                                 <?php if($appt['status'] === 'agendado') echo 'background: #e0e7ff; color: #4338ca;'; ?>
-                                                <?php if($appt['status'] === 'confirmado') echo 'background: #dcfce7; color: #15803d;'; ?>
-                                                <?php if($appt['status'] === 'atendido') echo 'background: #f1f5f9; color: #475569;'; ?>
-                                                <?php if($appt['status'] === 'cancelado') echo 'background: #fee2e2; color: #b91c1c;'; ?>
-                                                <?php if($appt['status'] === 'faltou') echo 'background: #fef3c7; color: #b45309;'; ?>
+                                                <?php if($appt['status'] === 'confirmado') echo 'background: #dcfce7; color: #15803d; border-color: #86efac;'; ?>
+                                                <?php if($appt['status'] === 'atendido') echo 'background: #e2e8f0; color: #475569; border-color: #cbd5e1;'; ?>
+                                                <?php if($appt['status'] === 'cancelado') echo 'background: #fca5a5; color: #7f1d1d; border-color: #f87171;'; ?>
+                                                <?php if($appt['status'] === 'faltou') echo 'background: #fde68a; color: #92400e; border-color: #fcd34d;'; ?>
                                                 ">
                                                     <option value="agendado" <?= $appt['status'] === 'agendado' ? 'selected' : '' ?>>Pendente</option>
                                                     <option value="confirmado" <?= $appt['status'] === 'confirmado' ? 'selected' : '' ?>>Confirmado</option>
