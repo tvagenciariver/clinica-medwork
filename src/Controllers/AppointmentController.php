@@ -11,14 +11,19 @@ class AppointmentController extends Controller {
         $this->authRequired(['admin']);
         
         $db = Database::getInstance();
-        $appointmentsRaw = $db->query("
+        $filterDate = $_GET['date'] ?? date('Y-m-d');
+
+        $stmt = $db->prepare("
             SELECT a.*, p.full_name as patient_name, p.main_phone, p.has_whatsapp,
                    s.name as specialty_name, s.color_hex as specialty_color
             FROM appointments a
             JOIN patients p ON a.patient_id = p.id
             LEFT JOIN specialties s ON a.specialty_id = s.id
+            WHERE a.appointment_date = :filterDate
             ORDER BY a.appointment_date ASC, a.appointment_time ASC
-        ")->fetchAll();
+        ");
+        $stmt->execute(['filterDate' => $filterDate]);
+        $appointmentsRaw = $stmt->fetchAll();
 
         // Agrupar por data, e depois por especialidade para o Kanban
         // Para simplificar o visual inicial, vamos mostrar os agendamentos "A partir de hoje" ou com filtro
@@ -31,6 +36,7 @@ class AppointmentController extends Controller {
         $this->view('admin/appointments/index', [
             'appointments' => $appointmentsRaw,
             'specialties' => $specialties,
+            'filterDate' => $filterDate,
             'msg' => $msg,
             'msg_type' => $msg_type
         ]);
@@ -240,5 +246,37 @@ class AppointmentController extends Controller {
         }
         
         $this->redirect('/admin/appointments');
+    }
+
+    public function updateStatus($id) {
+        $this->authRequired(['admin']);
+        if ($this->isPost()) {
+            $status = $_POST['status'] ?? '';
+            $validStatuses = ['agendado', 'confirmado', 'cancelado', 'atendido', 'faltou'];
+            
+            if (in_array($status, $validStatuses)) {
+                $db = Database::getInstance();
+                
+                // Se for cancelado, dispara Waha e cancela
+                if ($status === 'cancelado') {
+                    $stmt = $db->prepare("SELECT status FROM appointments WHERE id = ?");
+                    $stmt->execute([$id]);
+                    $appt = $stmt->fetch();
+                    if ($appt && $appt['status'] !== 'cancelado') {
+                        WahaApiService::sendCancellationNotice($id);
+                    }
+                }
+
+                $stmt = $db->prepare("UPDATE appointments SET status = :status WHERE id = :id");
+                $stmt->execute(['status' => $status, 'id' => $id]);
+                
+                $_SESSION['msg'] = 'Status alterado com sucesso.';
+                $_SESSION['msg_type'] = 'success';
+            }
+            
+            // Redirect back to the same date filter if provided
+            $date = $_POST['filter_date'] ?? date('Y-m-d');
+            $this->redirect('/admin/appointments?date=' . $date);
+        }
     }
 }

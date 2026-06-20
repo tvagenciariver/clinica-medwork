@@ -104,8 +104,15 @@
                 </div>
             <?php endif; ?>
 
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h1 class="page-title"><i class="fa-solid fa-calendar-check" style="color: var(--primary); margin-right: 0.5rem;"></i> Agenda Kanban</h1>
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h1 class="page-title" style="margin: 0;"><i class="fa-solid fa-calendar-check" style="color: var(--primary); margin-right: 0.5rem;"></i> Agenda Kanban</h1>
+                    
+                    <form method="GET" action="<?= BASE_URL ?>/admin/appointments" style="display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.25rem 0.5rem; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        <label for="date-filter" style="font-size: 0.875rem; font-weight: 500; color: #64748b; margin: 0;">Filtrar Data:</label>
+                        <input type="date" id="date-filter" name="date" value="<?= htmlspecialchars($filterDate ?? date('Y-m-d')) ?>" onchange="this.form.submit()" style="border: none; outline: none; font-family: inherit; color: #1e293b; background: transparent; cursor: pointer;">
+                    </form>
+                </div>
                 
                 <div style="display: flex; gap: 1rem; align-items: center;">
                     <button type="button" id="btn-disparar" class="btn" style="background: #25D366; color: white;" onclick="startWahaQueue()">
@@ -175,17 +182,22 @@
                                         </div>
                                         
                                         <div style="margin-bottom: 0.5rem;">
-                                            <?php if($appt['status'] === 'agendado'): ?>
-                                                <span class="status-badge" style="background: #e0e7ff; color: #4338ca;">Pendente</span>
-                                            <?php elseif($appt['status'] === 'confirmado'): ?>
-                                                <span class="status-badge" style="background: #dcfce7; color: #15803d;">Confirmado</span>
-                                            <?php elseif($appt['status'] === 'atendido'): ?>
-                                                <span class="status-badge" style="background: #f1f5f9; color: #475569;">Atendido</span>
-                                            <?php elseif($appt['status'] === 'cancelado'): ?>
-                                                <span class="status-badge" style="background: #fee2e2; color: #b91c1c;">Cancelado</span>
-                                            <?php elseif($appt['status'] === 'faltou'): ?>
-                                                <span class="status-badge" style="background: #fef3c7; color: #b45309;">Faltou</span>
-                                            <?php endif; ?>
+                                            <form action="<?= BASE_URL ?>/admin/appointments/updateStatus/<?= $appt['id'] ?>" method="POST" style="margin: 0;">
+                                                <input type="hidden" name="filter_date" value="<?= htmlspecialchars($filterDate ?? date('Y-m-d')) ?>">
+                                                <select name="status" onchange="this.form.submit()" class="status-badge" style="border: none; cursor: pointer; outline: none; width: 100%; text-align: left;
+                                                <?php if($appt['status'] === 'agendado') echo 'background: #e0e7ff; color: #4338ca;'; ?>
+                                                <?php if($appt['status'] === 'confirmado') echo 'background: #dcfce7; color: #15803d;'; ?>
+                                                <?php if($appt['status'] === 'atendido') echo 'background: #f1f5f9; color: #475569;'; ?>
+                                                <?php if($appt['status'] === 'cancelado') echo 'background: #fee2e2; color: #b91c1c;'; ?>
+                                                <?php if($appt['status'] === 'faltou') echo 'background: #fef3c7; color: #b45309;'; ?>
+                                                ">
+                                                    <option value="agendado" <?= $appt['status'] === 'agendado' ? 'selected' : '' ?>>Pendente</option>
+                                                    <option value="confirmado" <?= $appt['status'] === 'confirmado' ? 'selected' : '' ?>>Confirmado</option>
+                                                    <option value="atendido" <?= $appt['status'] === 'atendido' ? 'selected' : '' ?>>Atendido</option>
+                                                    <option value="cancelado" <?= $appt['status'] === 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
+                                                    <option value="faltou" <?= $appt['status'] === 'faltou' ? 'selected' : '' ?>>Faltou</option>
+                                                </select>
+                                            </form>
                                         </div>
 
                                         <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">
