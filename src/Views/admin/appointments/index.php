@@ -164,6 +164,15 @@
             }
             ?>
 
+            <div class="summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <?php foreach($kanban as $statusKey => $col): ?>
+                    <div class="summary-card" style="background: white; border-radius: 8px; padding: 1rem; border: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-bottom: 4px solid <?= htmlspecialchars($col['color']) ?>;">
+                        <span style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;"><?= htmlspecialchars($col['name']) ?></span>
+                        <span class="summary-count" data-status="<?= $statusKey ?>" style="font-size: 1.75rem; font-weight: 800; color: #1e293b;"><?= count($col['appointments']) ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
             <div class="kanban-board">
                 <?php foreach($kanban as $statusKey => $col): ?>
                     <div class="kanban-col" data-status="<?= $statusKey ?>">
@@ -297,8 +306,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateCounters() {
         document.querySelectorAll('.kanban-col').forEach(col => {
+            const status = col.getAttribute('data-status');
             const count = col.querySelectorAll('.draggable-card').length;
             col.querySelector('.count-badge').textContent = count;
+            
+            // Atualiza também os totalizadores do topo da tela
+            const summaryBadge = document.querySelector(`.summary-count[data-status="${status}"]`);
+            if (summaryBadge) {
+                summaryBadge.textContent = count;
+            }
         });
     }
 });
