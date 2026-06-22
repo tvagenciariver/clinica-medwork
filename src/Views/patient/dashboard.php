@@ -52,7 +52,7 @@
                         <td><?= htmlspecialchars($e['protocol_code']) ?></td>
                         <td>
                             <?php if(!empty($e['file_path'])): ?>
-                                <a href="<?= BASE_URL ?>/portal/exam/view/<?= $e['id'] ?>" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> Visualizar Exame</a>
+                                <a href="<?= BASE_URL ?>/portal/exam/view/<?= $e['id'] ?>" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> Visualizar</a>
                             <?php else: ?>
                                 <span class="badge badge-warning">Apenas Resultado Textual</span>
                             <?php endif; ?>
