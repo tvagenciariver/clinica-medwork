@@ -19,9 +19,40 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// TEMPORARY DB MIGRATION: expand file_path column and create appointments table
+// ==========================================
+// DB Connection
+// ==========================================
 try {
     $db = \Core\Database::getInstance();
+} catch (Exception $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
+// ==========================================
+// Global Settings Loader
+// ==========================================
+$appSettings = [];
+try {
+    $settingsRaw = $db->query("SELECT setting_key, setting_value FROM settings")->fetchAll();
+    foreach($settingsRaw as $s) {
+        $appSettings[$s['setting_key']] = $s['setting_value'];
+    }
+} catch (Exception $e) {
+    // Ignore se a tabela ainda não existir
+}
+
+// Fallbacks caso as chaves não existam no banco
+if (!isset($appSettings['company_name'])) $appSettings['company_name'] = 'MedWork';
+if (!isset($appSettings['company_logo'])) $appSettings['company_logo'] = '';
+
+// Variável global para ser usada nas views
+$GLOBALS['appSettings'] = $appSettings;
+
+// ==========================================
+// Routing Configuration
+// ==========================================
+// TEMPORARY DB MIGRATION: expand file_path column and create appointments table
+try {
     $db->query("ALTER TABLE exams MODIFY file_path TEXT");
     
     // Create specialties table
@@ -135,7 +166,21 @@ $router->add('POST', '/webhook/waha', 'WebhookController@wahaReceiver');
 // Automação / Cron
 $router->add('GET', '/cron/waha-daily', 'CronController@runDailyWaha');
 
-// Dispatch!
+// Settings routes
+$router->add('GET', '/admin/settings', 'SettingController@index');
+$router->add('POST', '/admin/settings/update', 'SettingController@update');
+
+// User Management routes
+$router->add('GET', '/admin/users', 'UserController@index');
+$router->add('GET', '/admin/users/create', 'UserController@create');
+$router->add('POST', '/admin/users/store', 'UserController@store');
+$router->add('GET', '/admin/users/edit/{id}', 'UserController@edit');
+$router->add('POST', '/admin/users/update/{id}', 'UserController@update');
+$router->add('GET', '/admin/users/delete/{id}', 'UserController@delete');
+
+// ==========================================
+// Dispatch
+// ==========================================
 // Pega o caminho relativo à pasta onde o script está rodando
 $basePath = dirname($_SERVER['SCRIPT_NAME']);
 $requestUri = $_SERVER['REQUEST_URI'];
