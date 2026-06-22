@@ -102,6 +102,7 @@
                                 <td>
                                     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                         <a href="<?= BASE_URL ?>/admin/exams/edit/<?= $e['id'] ?>" class="btn btn-secondary btn-sm" title="Editar"><i class="fa-solid fa-pencil"></i></a>
+                                        <a href="<?= BASE_URL ?>/admin/exams/delete/<?= $e['id'] ?>" class="btn btn-sm" style="background: #ef4444; color: white;" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir o exame do paciente <?= htmlspecialchars(addslashes($e['patient_name'])) ?>? Esta ação não pode ser desfeita.');"><i class="fa-solid fa-trash"></i></a>
                                         
                                         <?php if($e['status'] === 'registered' || $e['status'] === 'processing'): ?>
                                             <a href="<?= BASE_URL ?>/admin/exams/makeAvailable?id=<?= $e['id'] ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-check"></i> Marcar Disponível</a>

@@ -345,4 +345,38 @@ class ExamController extends Controller {
         }
         $this->redirect('/admin/exams');
     }
+
+    public function delete($id) {
+        $this->authRequired(['admin', 'employee']);
+        
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT file_path FROM exams WHERE id = ?");
+        $stmt->execute([$id]);
+        $exam = $stmt->fetch();
+        
+        if ($exam) {
+            // Delete physical files
+            if (!empty($exam['file_path'])) {
+                $paths = json_decode($exam['file_path'], true);
+                if (!is_array($paths)) {
+                    $paths = [$exam['file_path']];
+                }
+                foreach ($paths as $path) {
+                    $fullPath = __DIR__ . '/../../public/' . $path;
+                    if (file_exists($fullPath)) {
+                        unlink($fullPath);
+                    }
+                }
+            }
+            
+            $db->prepare("DELETE FROM exams WHERE id = ?")->execute([$id]);
+            $_SESSION['msg'] = 'Exame excluído com sucesso.';
+            $_SESSION['msg_type'] = 'success';
+        } else {
+            $_SESSION['msg'] = 'Exame não encontrado.';
+            $_SESSION['msg_type'] = 'error';
+        }
+        
+        $this->redirect('/admin/exams');
+    }
 }
