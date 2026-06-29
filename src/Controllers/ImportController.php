@@ -49,13 +49,13 @@ class ImportController extends Controller {
 
             // Tentar ler a planilha
             if ($ext === 'xlsx') {
-                $xlsx = \SimpleXLSX::parse($file['tmp_name']);
+                $xlsx = \Shuchkin\SimpleXLSX::parse($file['tmp_name']);
             } else {
-                $xlsx = \SimpleXLS::parse($file['tmp_name']);
+                $xlsx = \Shuchkin\SimpleXLS::parse($file['tmp_name']);
             }
 
             if (!$xlsx) {
-                $_SESSION['msg'] = 'Não foi possível ler o arquivo Excel: ' . (\SimpleXLSX::parseError() ?? 'Erro desconhecido');
+                $_SESSION['msg'] = 'Não foi possível ler o arquivo Excel: ' . (\Shuchkin\SimpleXLSX::parseError() ?? 'Erro desconhecido');
                 $_SESSION['msg_type'] = 'error';
                 $this->redirect('/admin/import');
                 return;
