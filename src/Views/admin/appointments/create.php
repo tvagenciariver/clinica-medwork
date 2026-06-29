@@ -36,18 +36,18 @@
                 <form action="<?= BASE_URL ?>/admin/appointments/store" method="POST">
                     
                     <div class="form-group">
-                        <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
-                            Paciente *
-                            <button type="button" class="btn btn-sm" style="background: var(--primary); color: white; padding: 2px 8px; font-size: 0.8rem;" onclick="document.getElementById('modalNovoPaciente').style.display = 'flex'">
+                        <label class="form-label">Paciente *</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <select name="patient_id" id="patient_id" class="form-control" required style="flex: 1;">
+                                <option value="">-- Selecione o paciente --</option>
+                                <?php foreach($patients as $p): ?>
+                                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['full_name']) ?> (CPF: <?= htmlspecialchars($p['main_phone'] ?? 'Sem telefone') ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('modalNovoPaciente').style.display = 'flex'" style="white-space: nowrap;">
                                 <i class="fa-solid fa-plus"></i> Novo Paciente
                             </button>
-                        </label>
-                        <select name="patient_id" id="patient_id" class="form-control" required>
-                            <option value="">-- Selecione o paciente --</option>
-                            <?php foreach($patients as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['full_name']) ?> (CPF: <?= htmlspecialchars($p['main_phone'] ?? 'Sem telefone') ?>)</option>
-                            <?php endforeach; ?>
-                        </select>
+                        </div>
                         <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
                             O paciente precisa estar cadastrado no sistema (menu Pacientes).
                         </small>
