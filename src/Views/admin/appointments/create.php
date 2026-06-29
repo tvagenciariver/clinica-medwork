@@ -36,13 +36,16 @@
                 <form action="<?= BASE_URL ?>/admin/appointments/store" method="POST">
                     
                     <div class="form-group">
-                        <label class="form-label">Paciente *</label>
-                        <select name="patient_id" class="form-control" required>
-                            <option value="">-- Selecione o Paciente --</option>
+                        <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                            Paciente *
+                            <button type="button" class="btn btn-sm" style="background: var(--primary); color: white; padding: 2px 8px; font-size: 0.8rem;" onclick="document.getElementById('modalNovoPaciente').style.display = 'flex'">
+                                <i class="fa-solid fa-plus"></i> Novo Paciente
+                            </button>
+                        </label>
+                        <select name="patient_id" id="patient_id" class="form-control" required>
+                            <option value="">-- Selecione o paciente --</option>
                             <?php foreach($patients as $p): ?>
-                                <option value="<?= $p['id'] ?>">
-                                    <?= htmlspecialchars($p['full_name']) ?> (<?= htmlspecialchars($p['main_phone']) ?>)
-                                </option>
+                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['full_name']) ?> (CPF: <?= htmlspecialchars($p['main_phone'] ?? 'Sem telefone') ?>)</option>
                             <?php endforeach; ?>
                         </select>
                         <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
@@ -83,5 +86,94 @@
     </main>
 </div>
 
+<!-- Modal Novo Paciente -->
+<div id="modalNovoPaciente" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 8px; width: 100%; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h2 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.25rem;">Cadastrar Novo Paciente</h2>
+        
+        <form id="formNovoPaciente" onsubmit="salvarNovoPaciente(event)">
+            <div class="form-group">
+                <label class="form-label">Nome Completo *</label>
+                <input type="text" id="modal_full_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">CPF *</label>
+                <input type="text" id="modal_cpf" class="form-control" required placeholder="Apenas números">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Telefone / Celular</label>
+                <input type="text" id="modal_phone" class="form-control">
+            </div>
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="modal_has_whatsapp" value="1" checked>
+                    <span class="form-label" style="margin: 0;">Este número possui WhatsApp</span>
+                </label>
+            </div>
+            
+            <div id="modal-error" style="color: #ef4444; font-size: 0.9rem; margin-bottom: 1rem; display: none;"></div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalNovoPaciente').style.display = 'none'">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSalvarPaciente">Salvar Paciente</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+async function salvarNovoPaciente(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSalvarPaciente');
+    const errorBox = document.getElementById('modal-error');
+    
+    const fullName = document.getElementById('modal_full_name').value;
+    const cpf = document.getElementById('modal_cpf').value;
+    const phone = document.getElementById('modal_phone').value;
+    const hasWhatsapp = document.getElementById('modal_has_whatsapp').checked;
+
+    btn.disabled = true;
+    btn.innerText = 'Salvando...';
+    errorBox.style.display = 'none';
+
+    try {
+        const response = await fetch('<?= BASE_URL ?>/admin/patients/storeAjax', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                full_name: fullName,
+                cpf: cpf,
+                main_phone: phone,
+                has_whatsapp: hasWhatsapp
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            // Sucesso! Adicionar no select e selecionar
+            const select = document.getElementById('patient_id');
+            const option = document.createElement('option');
+            option.value = data.patient.id;
+            option.text = `${data.patient.full_name} (CPF: ${data.patient.cpf})`;
+            select.appendChild(option);
+            select.value = data.patient.id;
+
+            // Fechar modal
+            document.getElementById('modalNovoPaciente').style.display = 'none';
+            document.getElementById('formNovoPaciente').reset();
+        } else {
+            errorBox.innerText = data.message || 'Erro ao salvar paciente.';
+            errorBox.style.display = 'block';
+        }
+    } catch (err) {
+        errorBox.innerText = 'Erro de comunicação com o servidor.';
+        errorBox.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'Salvar Paciente';
+    }
+}
+</script>
 </body>
 </html>

@@ -63,6 +63,9 @@ class AppointmentController extends Controller {
             $specialty_id = $_POST['specialty_id'] ?? null;
             $appointment_date = $_POST['appointment_date'] ?? '';
             $appointment_time = $_POST['appointment_time'] ?? null;
+            if ($appointment_time === '') {
+                $appointment_time = null;
+            }
             
             if (!$patient_id || !$specialty_id || !$appointment_date) {
                 $_SESSION['msg'] = 'Paciente, Especialidade e Data são obrigatórios.';
@@ -141,6 +144,9 @@ class AppointmentController extends Controller {
             $specialty_id = $_POST['specialty_id'] ?? null;
             $appointment_date = $_POST['appointment_date'] ?? '';
             $appointment_time = $_POST['appointment_time'] ?? null;
+            if ($appointment_time === '') {
+                $appointment_time = null;
+            }
             $status = $_POST['status'] ?? 'agendado';
             
             try {

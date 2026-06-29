@@ -114,6 +114,61 @@ class PatientController extends Controller {
         }
     }
 
+    public function storeAjax() {
+        $this->authRequired(['admin', 'employee']);
+        if ($this->isPost()) {
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!$data) {
+                $data = $_POST;
+            }
+            
+            $db = Database::getInstance();
+            $full_name = trim($data['full_name'] ?? '');
+            $cpf = preg_replace('/[^0-9]/', '', $data['cpf'] ?? '');
+            $main_phone = $data['main_phone'] ?? '';
+            $has_whatsapp = isset($data['has_whatsapp']) && $data['has_whatsapp'] ? 1 : 0;
+            
+            if (empty($full_name) || empty($cpf)) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Nome e CPF são obrigatórios.']);
+                exit;
+            }
+
+            try {
+                $stmt = $db->prepare("
+                    INSERT INTO patients (full_name, cpf, main_phone, has_whatsapp)
+                    VALUES (:full_name, :cpf, :main_phone, :has_whatsapp)
+                ");
+                $stmt->execute([
+                    'full_name' => $full_name,
+                    'cpf' => $cpf,
+                    'main_phone' => $main_phone,
+                    'has_whatsapp' => $has_whatsapp
+                ]);
+                $patient_id = $db->lastInsertId();
+
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'status' => 'success', 
+                    'patient' => [
+                        'id' => $patient_id, 
+                        'full_name' => $full_name, 
+                        'cpf' => $cpf
+                    ]
+                ]);
+                exit;
+            } catch (\PDOException $e) {
+                http_response_code(400);
+                if ($e->getCode() == 23000) {
+                    echo json_encode(['status' => 'error', 'message' => 'Este CPF já está cadastrado no sistema.']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Erro ao salvar o paciente.']);
+                }
+                exit;
+            }
+        }
+    }
+
     public function edit($id) {
         $this->authRequired(['admin', 'employee']);
         
