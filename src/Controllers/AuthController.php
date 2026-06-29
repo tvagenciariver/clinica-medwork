@@ -35,9 +35,12 @@ class AuthController extends Controller {
                 $this->redirect('/login');
             }
 
+            // Remove pontos e traços caso o usuário tenha digitado o CPF formatado
+            $loginKey = preg_replace('/[^0-9a-zA-Z@._-]/', '', $email);
+
             $db = Database::getInstance();
             $stmt = $db->prepare("SELECT * FROM users WHERE email = :email AND status = 'active'");
-            $stmt->execute(['email' => $email]);
+            $stmt->execute(['email' => $loginKey]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
@@ -47,12 +50,17 @@ class AuthController extends Controller {
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['company_id'] = $user['company_id'];
                 $_SESSION['patient_id'] = $user['patient_id'];
+                $_SESSION['force_password_change'] = $user['force_password_change'] ?? 0;
 
                 // Atualizar último acesso
                 $update = $db->prepare("UPDATE users SET last_access = NOW() WHERE id = :id");
                 $update->execute(['id' => $user['id']]);
 
-                $this->redirectBasedOnRole($user['role']);
+                if (!empty($user['force_password_change'])) {
+                    $this->redirect('/portal/change-password');
+                } else {
+                    $this->redirectBasedOnRole($user['role']);
+                }
             } else {
                 $_SESSION['error'] = 'Credenciais inválidas ou usuário inativo.';
                 $this->redirect('/login');

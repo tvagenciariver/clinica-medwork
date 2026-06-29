@@ -30,6 +30,11 @@ class Controller {
             $this->redirect('/login');
         }
 
+        // Se precisa trocar senha e não está na rota de troca de senha
+        if (!empty($_SESSION['force_password_change']) && strpos($_SERVER['REQUEST_URI'], '/portal/change-password') === false) {
+            $this->redirect('/portal/change-password');
+        }
+
         if (!empty($roles) && !in_array($_SESSION['role'], $roles)) {
             die("Acesso negado."); // TODO: Redirecionar para uma página de erro agradável
         }

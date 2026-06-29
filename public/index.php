@@ -51,9 +51,10 @@ $GLOBALS['appSettings'] = $appSettings;
 // ==========================================
 // Routing Configuration
 // ==========================================
-// TEMPORARY DB MIGRATION: expand file_path column and create appointments table
+// TEMPORARY DB MIGRATION
 try {
     $db->query("ALTER TABLE exams MODIFY file_path TEXT");
+    $db->query("ALTER TABLE users ADD COLUMN force_password_change BOOLEAN DEFAULT FALSE");
     
     // Create specialties table
     $db->query("CREATE TABLE IF NOT EXISTS specialties (
@@ -101,6 +102,10 @@ $router->add('GET', '/', 'AuthController@index');
 $router->add('GET', '/login', 'AuthController@index');
 $router->add('POST', '/login', 'AuthController@login');
 $router->add('GET', '/logout', 'AuthController@logout');
+
+// Profile (Password Change)
+$router->add('GET', '/portal/change-password', 'ProfileController@changePassword');
+$router->add('POST', '/portal/change-password/update', 'ProfileController@updatePassword');
 
 // Dashboard Admin/Func
 $router->add('GET', '/admin/dashboard', 'DashboardController@index');
@@ -170,6 +175,10 @@ $router->add('GET', '/cron/waha-daily', 'CronController@runDailyWaha');
 // Settings routes
 $router->add('GET', '/admin/settings', 'SettingController@index');
 $router->add('POST', '/admin/settings/update', 'SettingController@update');
+
+// Import routes
+$router->add('GET', '/admin/import', 'ImportController@index');
+$router->add('POST', '/admin/import/process', 'ImportController@process');
 
 // User Management routes
 $router->add('GET', '/admin/users', 'UserController@index');

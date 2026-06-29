@@ -28,6 +28,9 @@
         <a href="<?= BASE_URL ?>/admin/companies" class="nav-item">
             <i class="fa-solid fa-building"></i> Empresas
         </a>
+        <a href="<?= BASE_URL ?>/admin/import" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/import') !== false ? 'active' : '' ?>">
+            <i class="fa-solid fa-file-excel"></i> Importar Dados
+        </a>
         <a href="<?= BASE_URL ?>/admin/settings" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false ? 'active' : '' ?>">
             <i class="fa-solid fa-gear"></i> Configurações
         </a>
