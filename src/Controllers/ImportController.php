@@ -112,13 +112,16 @@ class ImportController extends Controller {
                         continue;
                     }
 
-                    // Tratar Data (Pode vir como dd/mm/yyyy ou formato Excel serial)
+                    // Tratar Data (Pode vir como dd/mm/yyyy, YYYY-MM-DD HH:MM:SS ou formato Excel serial)
                     if (is_numeric($data_exame_raw)) {
                         // Converter Excel Serial Date
                         $unix_date = ($data_exame_raw - 25569) * 86400;
                         $data_exame = gmdate("Y-m-d", $unix_date);
+                    } else if (strpos($data_exame_raw, '-') !== false) {
+                        // Formato YYYY-MM-DD...
+                        $data_exame = substr(trim($data_exame_raw), 0, 10);
                     } else {
-                        // Tentar fazer parse
+                        // Tentar fazer parse dd/mm/yyyy
                         $data_parts = explode('/', $data_exame_raw);
                         if (count($data_parts) === 3) {
                             $data_exame = $data_parts[2] . '-' . $data_parts[1] . '-' . $data_parts[0];
@@ -149,7 +152,8 @@ class ImportController extends Controller {
                         } else {
                             // Criar empresa genérica temporária baseada no nome
                             $stmt = $db->prepare("INSERT INTO companies (corporate_name, trade_name, cnpj) VALUES (?, ?, ?)");
-                            $fake_cnpj = '000000' . rand(1000, 9999) . time();
+                            // CNPJ max 18 chars. uniqid() gives 13 chars.
+                            $fake_cnpj = '00' . uniqid(); 
                             $stmt->execute([$empresa_nome, $empresa_nome, $fake_cnpj]);
                             $company_id = $db->lastInsertId();
                         }
