@@ -20,7 +20,7 @@ class AppointmentController extends Controller {
             JOIN patients p ON a.patient_id = p.id
             LEFT JOIN specialties s ON a.specialty_id = s.id
             WHERE a.appointment_date = :filterDate
-            ORDER BY a.appointment_date ASC, a.appointment_time ASC
+            ORDER BY a.specialty_id ASC, a.arrival_order ASC, a.appointment_time ASC
         ");
         $stmt->execute(['filterDate' => $filterDate]);
         $appointmentsRaw = $stmt->fetchAll();
@@ -62,10 +62,10 @@ class AppointmentController extends Controller {
             $patient_id = $_POST['patient_id'] ?? null;
             $specialty_id = $_POST['specialty_id'] ?? null;
             $appointment_date = $_POST['appointment_date'] ?? '';
-            $appointment_time = $_POST['appointment_time'] ?? '';
+            $appointment_time = $_POST['appointment_time'] ?? null;
             
-            if (!$patient_id || !$specialty_id || !$appointment_date || !$appointment_time) {
-                $_SESSION['msg'] = 'Todos os campos são obrigatórios.';
+            if (!$patient_id || !$specialty_id || !$appointment_date) {
+                $_SESSION['msg'] = 'Paciente, Especialidade e Data são obrigatórios.';
                 $_SESSION['msg_type'] = 'error';
                 $this->redirect('/admin/appointments/create');
             }
@@ -78,16 +78,23 @@ class AppointmentController extends Controller {
                 $stmtSpec->execute([$specialty_id]);
                 $specName = $stmtSpec->fetchColumn() ?: 'Geral';
 
+                // Calcula a ordem de chegada
+                $stmtOrder = $db->prepare("SELECT MAX(arrival_order) FROM appointments WHERE appointment_date = ? AND specialty_id = ?");
+                $stmtOrder->execute([$appointment_date, $specialty_id]);
+                $maxOrder = (int)$stmtOrder->fetchColumn();
+                $arrival_order = $maxOrder + 1;
+
                 $stmt = $db->prepare("
-                    INSERT INTO appointments (patient_id, specialty_id, procedure_name, appointment_date, appointment_time, status)
-                    VALUES (:patient_id, :specialty_id, :procedure_name, :appointment_date, :appointment_time, 'agendado')
+                    INSERT INTO appointments (patient_id, specialty_id, procedure_name, appointment_date, appointment_time, arrival_order, status)
+                    VALUES (:patient_id, :specialty_id, :procedure_name, :appointment_date, :appointment_time, :arrival_order, 'agendado')
                 ");
                 $stmt->execute([
                     'patient_id' => $patient_id,
                     'specialty_id' => $specialty_id,
                     'procedure_name' => $specName,
                     'appointment_date' => $appointment_date,
-                    'appointment_time' => $appointment_time
+                    'appointment_time' => $appointment_time,
+                    'arrival_order' => $arrival_order
                 ]);
                 
                 $_SESSION['msg'] = 'Agendamento criado com sucesso!';
@@ -133,7 +140,7 @@ class AppointmentController extends Controller {
             $patient_id = $_POST['patient_id'] ?? null;
             $specialty_id = $_POST['specialty_id'] ?? null;
             $appointment_date = $_POST['appointment_date'] ?? '';
-            $appointment_time = $_POST['appointment_time'] ?? '';
+            $appointment_time = $_POST['appointment_time'] ?? null;
             $status = $_POST['status'] ?? 'agendado';
             
             try {

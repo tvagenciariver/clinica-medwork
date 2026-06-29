@@ -57,14 +57,14 @@
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group">
-                            <label class="form-label">Data *</label>
-                            <input type="date" name="appointment_date" class="form-control" value="<?= htmlspecialchars($appointment['appointment_date']) ?>" required>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Data do Agendamento *</label>
+                            <input type="date" name="appointment_date" class="form-control" required value="<?= htmlspecialchars($appointment['appointment_date']) ?>">
                         </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Hora *</label>
-                            <input type="time" name="appointment_time" class="form-control" value="<?= htmlspecialchars($appointment['appointment_time']) ?>" required>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Horário Fixo (Opcional)</label>
+                            <input type="time" name="appointment_time" class="form-control" value="<?= htmlspecialchars($appointment['appointment_time']) ?>">
+                            <small style="color: #64748b;">Deixe em branco para manter a Ordem de Chegada.</small>
                         </div>
                     </div>
 

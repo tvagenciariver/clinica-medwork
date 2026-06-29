@@ -195,8 +195,18 @@
                                             <i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 0.875rem;" title="Possui WhatsApp"></i>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="k-card-time">
-                                        <i class="fa-regular fa-clock"></i> <?= date('H:i', strtotime($appt['appointment_time'])) ?>
+                                    <div class="k-card-time" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                        <?php if (!empty($appt['appointment_time'])): ?>
+                                            <span><i class="fa-regular fa-clock"></i> <?= date('H:i', strtotime($appt['appointment_time'])) ?></span>
+                                        <?php endif; ?>
+                                        <?php if (!empty($appt['arrival_order'])): ?>
+                                            <span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #475569;">
+                                                <i class="fa-solid fa-list-ol"></i> Ficha #<?= $appt['arrival_order'] ?>
+                                            </span>
+                                        <?php endif; ?>
+                                        <?php if (empty($appt['appointment_time']) && empty($appt['arrival_order'])): ?>
+                                            <span style="color: #64748b;"><i class="fa-solid fa-person-walking"></i> Ordem de Chegada</span>
+                                        <?php endif; ?>
                                     </div>
                                     
                                     <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">

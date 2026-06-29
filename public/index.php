@@ -52,46 +52,52 @@ $GLOBALS['appSettings'] = $appSettings;
 // Routing Configuration
 // ==========================================
 // TEMPORARY DB MIGRATION
-try {
-    $db->query("ALTER TABLE exams MODIFY file_path TEXT");
-    $db->query("ALTER TABLE users ADD COLUMN force_password_change BOOLEAN DEFAULT FALSE");
-    $db->query("ALTER TABLE exams MODIFY status ENUM('registered', 'processing', 'available', 'sent_whatsapp', 'viewed_patient', 'viewed_company', 'cancelled') DEFAULT 'registered'");
-    
-    // Create specialties table
-    $db->query("CREATE TABLE IF NOT EXISTS specialties (
+$migrations = [
+    "ALTER TABLE exams MODIFY file_path TEXT",
+    "ALTER TABLE users ADD COLUMN force_password_change BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE exams MODIFY status ENUM('registered', 'processing', 'available', 'sent_whatsapp', 'viewed_patient', 'viewed_company', 'cancelled') DEFAULT 'registered'",
+    "CREATE TABLE IF NOT EXISTS specialties (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(150) NOT NULL,
         color_hex VARCHAR(7) DEFAULT '#3b82f6',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
-    
-    // Insert default specialties if empty
-    $count = $db->query("SELECT COUNT(*) FROM specialties")->fetchColumn();
-    if ($count == 0) {
-        $db->query("INSERT INTO specialties (name, color_hex) VALUES ('Clínica Geral', '#3b82f6'), ('Raio-X', '#f59e0b'), ('Audiometria', '#10b981'), ('Psicologia', '#8b5cf6')");
-    }
-
-    // Create appointments table
-    $db->query("CREATE TABLE IF NOT EXISTS appointments (
+    )",
+    "CREATE TABLE IF NOT EXISTS appointments (
         id INT AUTO_INCREMENT PRIMARY KEY,
         patient_id INT NOT NULL,
         specialty_id INT DEFAULT NULL,
         procedure_name VARCHAR(150) NULL,
         appointment_date DATE NOT NULL,
-        appointment_time TIME NOT NULL,
+        appointment_time TIME NULL,
+        arrival_order INT NULL,
         status ENUM('agendado', 'confirmado', 'cancelado', 'atendido', 'faltou') DEFAULT 'agendado',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
         FOREIGN KEY (specialty_id) REFERENCES specialties(id) ON DELETE SET NULL
-    )");
+    )",
+    "ALTER TABLE appointments ADD COLUMN specialty_id INT DEFAULT NULL AFTER patient_id",
+    "ALTER TABLE appointments MODIFY procedure_name VARCHAR(150) NULL",
+    "ALTER TABLE appointments ADD CONSTRAINT fk_specialty FOREIGN KEY (specialty_id) REFERENCES specialties(id) ON DELETE SET NULL",
+    "ALTER TABLE appointments MODIFY appointment_time TIME NULL",
+    "ALTER TABLE appointments ADD COLUMN arrival_order INT NULL"
+];
 
-    // Migration to add specialty_id to existing appointments table
-    $db->query("ALTER TABLE appointments ADD COLUMN specialty_id INT DEFAULT NULL AFTER patient_id");
-    $db->query("ALTER TABLE appointments MODIFY procedure_name VARCHAR(150) NULL");
-    $db->query("ALTER TABLE appointments ADD CONSTRAINT fk_specialty FOREIGN KEY (specialty_id) REFERENCES specialties(id) ON DELETE SET NULL");
+foreach ($migrations as $sql) {
+    try {
+        $db->query($sql);
+    } catch (\Throwable $e) {
+        // ignore errors for duplicate columns etc
+    }
+}
+
+try {
+    $count = $db->query("SELECT COUNT(*) FROM specialties")->fetchColumn();
+    if ($count == 0) {
+        $db->query("INSERT INTO specialties (name, color_hex) VALUES ('Clínica Geral', '#3b82f6'), ('Raio-X', '#f59e0b'), ('Audiometria', '#10b981'), ('Psicologia', '#8b5cf6')");
+    }
 } catch (\Throwable $e) {
-    // ignore if already done or errors
+    // ignore
 }
 
 // Instancia Roteador

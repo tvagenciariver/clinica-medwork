@@ -61,14 +61,14 @@
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group">
-                            <label class="form-label">Data *</label>
-                            <input type="date" name="appointment_date" class="form-control" required>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Data do Agendamento *</label>
+                            <input type="date" name="appointment_date" class="form-control" required value="<?= date('Y-m-d') ?>">
                         </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Hora *</label>
-                            <input type="time" name="appointment_time" class="form-control" required>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Horário Fixo (Opcional)</label>
+                            <input type="time" name="appointment_time" class="form-control">
+                            <small style="color: #64748b;">Deixe em branco para controle por Ordem de Chegada.</small>
                         </div>
                     </div>
 
