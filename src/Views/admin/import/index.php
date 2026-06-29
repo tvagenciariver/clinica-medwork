@@ -107,6 +107,12 @@ $pageTitle = 'Importar Dados';
                         <div class="stat-value" style="color: #ef4444;"><?= $import_stats['errors'] ?></div>
                     </div>
                 </div>
+                
+                <?php if(!empty($import_debug)): ?>
+                    <div style="margin-top: 1rem; background: #fee2e2; border: 1px solid #fca5a5; padding: 1rem; border-radius: 6px; color: #991b1b; font-size: 0.9rem;">
+                        <strong>Debug (Primeiro Erro):</strong> <?= htmlspecialchars($import_debug) ?>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
         </div>

@@ -16,13 +16,15 @@ class ImportController extends Controller {
         $msg = $_SESSION['msg'] ?? null;
         $msg_type = $_SESSION['msg_type'] ?? null;
         $import_stats = $_SESSION['import_stats'] ?? null;
+        $import_debug = $_SESSION['import_debug'] ?? null;
         
-        unset($_SESSION['msg'], $_SESSION['msg_type'], $_SESSION['import_stats']);
+        unset($_SESSION['msg'], $_SESSION['msg_type'], $_SESSION['import_stats'], $_SESSION['import_debug']);
         
         $this->view('admin/import/index', [
             'msg' => $msg,
             'msg_type' => $msg_type,
-            'import_stats' => $import_stats
+            'import_stats' => $import_stats,
+            'import_debug' => $import_debug
         ]);
     }
 
@@ -77,6 +79,8 @@ class ImportController extends Controller {
                 'skipped' => 0,
                 'errors' => 0
             ];
+            
+            $debug_msg = null;
 
             // Pular o cabeçalho (índice 0)
             for ($i = 1; $i < count($rows); $i++) {
@@ -95,6 +99,7 @@ class ImportController extends Controller {
                     // Se não tiver CPF ou Paciente, ignorar a linha
                     if (empty($paciente_nome) || empty($cpf_bruto)) {
                         $stats['errors']++;
+                        if (!$debug_msg) $debug_msg = "Linha {$i}: CPF ou Paciente vazios. (Paciente: '$paciente_nome', CPF bruto: '$cpf_bruto')";
                         continue;
                     }
 
@@ -103,6 +108,7 @@ class ImportController extends Controller {
                     
                     if (empty($cpf)) {
                         $stats['errors']++;
+                        if (!$debug_msg) $debug_msg = "Linha {$i}: CPF ficou vazio após limpeza. Bruto era: '$cpf_bruto'";
                         continue;
                     }
 
@@ -200,10 +206,12 @@ class ImportController extends Controller {
 
                 } catch (\Exception $e) {
                     $stats['errors']++;
+                    if (!$debug_msg) $debug_msg = "Linha {$i} Exception: " . $e->getMessage();
                 }
             }
 
             $_SESSION['import_stats'] = $stats;
+            $_SESSION['import_debug'] = $debug_msg;
             $_SESSION['msg'] = 'Importação concluída!';
             $_SESSION['msg_type'] = 'success';
             
