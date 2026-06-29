@@ -12,9 +12,13 @@
 
 <div class="login-wrapper">
     <div class="login-card">
-        <div class="login-brand">
-            <h1><i class="fa-solid fa-heart-pulse"></i> MedWork</h1>
-            <p>Sistema de Medicina Ocupacional</p>
+        <div class="login-brand" style="text-align: center; margin-bottom: 2rem;">
+            <?php if (!empty($GLOBALS['appSettings']['company_logo'])): ?>
+                <img src="<?= BASE_URL . $GLOBALS['appSettings']['company_logo'] ?>" alt="Logo" style="max-height: 80px; margin-bottom: 1rem; object-fit: contain;">
+            <?php else: ?>
+                <h1><i class="fa-solid fa-heart-pulse"></i> <?= htmlspecialchars($GLOBALS['appSettings']['company_name'] ?? 'MedWork') ?></h1>
+            <?php endif; ?>
+            <p style="color: #64748b; font-size: 0.95rem; margin-top: 0.5rem;">Sistema de Medicina Ocupacional</p>
         </div>
 
         <?php if (!empty($error)): ?>

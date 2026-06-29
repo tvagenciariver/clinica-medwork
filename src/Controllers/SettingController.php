@@ -37,9 +37,13 @@ class SettingController extends Controller {
             $logoPath = null;
             if (isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] === UPLOAD_ERR_OK) {
                 $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
-                $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mimeType = finfo_file($fileInfo, $_FILES['company_logo']['tmp_name']);
-                finfo_close($fileInfo);
+                
+                $mimeType = $_FILES['company_logo']['type'];
+                $imageInfo = @getimagesize($_FILES['company_logo']['tmp_name']);
+                
+                if ($imageInfo !== false) {
+                    $mimeType = $imageInfo['mime'];
+                }
 
                 if (in_array($mimeType, $allowedMimeTypes)) {
                     $ext = pathinfo($_FILES['company_logo']['name'], PATHINFO_EXTENSION);
