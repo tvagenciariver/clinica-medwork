@@ -48,7 +48,7 @@
                         <select name="patient_id" class="form-control" required>
                             <option value="">-- Selecione o paciente --</option>
                             <?php foreach($patients as $p): ?>
-                                <option value="<?= $p['id'] ?>" <?= $exam['patient_id'] == $p['id'] ? 'selected' : '' ?>><?= htmlspecialchars($p['full_name']) ?> (CPF: <?= htmlspecialchars($p['cpf']) ?>)</option>
+                                <option value="<?= $p['id'] ?>" data-company-id="<?= htmlspecialchars($p['default_company_id']) ?>" <?= $exam['patient_id'] == $p['id'] ? 'selected' : '' ?>><?= htmlspecialchars($p['full_name']) ?> (CPF: <?= htmlspecialchars($p['cpf']) ?>)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -158,16 +158,53 @@
 </div>
 
 <script>
-document.getElementById('originSelect').addEventListener('change', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    var originSelect = document.getElementById('originSelect');
     var companyWrapper = document.getElementById('companyWrapper');
     var companySelect = document.getElementById('companySelect');
-    if (this.value === 'company') {
-        companyWrapper.style.display = 'block';
-        companySelect.setAttribute('required', 'required');
-    } else {
-        companyWrapper.style.display = 'none';
-        companySelect.removeAttribute('required');
+    var patientSelect = document.querySelector('select[name="patient_id"]');
+    var patientOptions = Array.from(patientSelect.options);
+    var currentPatientId = "<?= $exam['patient_id'] ?>";
+
+    function filterPatients() {
+        var companyId = companySelect.value;
+        var isCompanyOrigin = originSelect.value === 'company';
+        var currentSelected = patientSelect.value;
+        
+        patientSelect.innerHTML = '';
+        patientOptions.forEach(function(opt) {
+            if (opt.value === '') {
+                patientSelect.appendChild(opt.cloneNode(true)); // placeholder
+                return;
+            }
+            // Se for particular, ou se a empresa não foi selecionada, ou se bate com a empresa
+            if (!isCompanyOrigin || !companyId || opt.getAttribute('data-company-id') === companyId) {
+                var newOpt = opt.cloneNode(true);
+                // Manter selecionado se estava
+                if (newOpt.value === currentSelected || (currentSelected === '' && newOpt.value === currentPatientId)) {
+                    newOpt.selected = true;
+                }
+                patientSelect.appendChild(newOpt);
+            }
+        });
     }
+
+    originSelect.addEventListener('change', function() {
+        if (this.value === 'company') {
+            companyWrapper.style.display = 'block';
+            companySelect.setAttribute('required', 'required');
+        } else {
+            companyWrapper.style.display = 'none';
+            companySelect.removeAttribute('required');
+            companySelect.value = ''; // Limpa empresa
+        }
+        filterPatients();
+    });
+
+    companySelect.addEventListener('change', filterPatients);
+    
+    // Initial filter
+    filterPatients();
 });
 </script>
 

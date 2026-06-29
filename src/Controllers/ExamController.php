@@ -86,7 +86,7 @@ class ExamController extends Controller {
     public function create() {
         $this->authRequired(['admin', 'employee']);
         $db = Database::getInstance();
-        $patients = $db->query("SELECT id, full_name, cpf FROM patients ORDER BY full_name ASC")->fetchAll();
+        $patients = $db->query("SELECT id, full_name, cpf, default_company_id FROM patients ORDER BY full_name ASC")->fetchAll();
         $companies = $db->query("SELECT id, trade_name FROM companies WHERE status = 'active' ORDER BY trade_name ASC")->fetchAll();
         $this->view('admin/exams/create', ['patients' => $patients, 'companies' => $companies]);
     }
@@ -193,7 +193,7 @@ class ExamController extends Controller {
             $this->redirect('/admin/exams');
         }
 
-        $patients = $db->query("SELECT id, full_name, cpf FROM patients ORDER BY full_name ASC")->fetchAll();
+        $patients = $db->query("SELECT id, full_name, cpf, default_company_id FROM patients ORDER BY full_name ASC")->fetchAll();
         $companies = $db->query("SELECT id, trade_name FROM companies WHERE status = 'active' ORDER BY trade_name ASC")->fetchAll();
         $this->view('admin/exams/edit', ['exam' => $exam, 'patients' => $patients, 'companies' => $companies]);
     }
