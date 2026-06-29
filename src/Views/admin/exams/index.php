@@ -26,7 +26,7 @@
             </div>
 
             <div class="card" style="margin-bottom: 1.5rem;">
-                <form method="GET" action="<?= BASE_URL ?>/admin/exams" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                <form id="filterForm" method="GET" action="<?= BASE_URL ?>/admin/exams" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
                     <div class="form-group" style="flex: 2; margin: 0; min-width: 250px;">
                         <label class="form-label">Buscar Paciente (Nome/CPF)</label>
                         <input type="text" name="search" class="form-control" value="<?= htmlspecialchars($search ?? '') ?>" placeholder="Digite sua busca...">
@@ -45,7 +45,7 @@
                     </div>
                     <div class="form-group" style="flex: 1.5; margin: 0; min-width: 200px;">
                         <label class="form-label">Empresa</label>
-                        <select name="company_id" class="form-control">
+                        <select name="company_id" class="form-control" onchange="document.getElementById('filterForm').submit();">
                             <option value="">Todas as Empresas</option>
                             <?php foreach ($companies ?? [] as $c): ?>
                                 <option value="<?= $c['id'] ?>" <?= (isset($company_id) && $company_id == $c['id']) ? 'selected' : '' ?>>
