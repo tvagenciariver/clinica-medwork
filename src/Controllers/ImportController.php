@@ -143,7 +143,8 @@ class ImportController extends Controller {
 
                     // 1. GERENCIAR EMPRESA
                     $company_id = null;
-                    if (!empty($empresa_nome)) {
+                    $empresa_clean = strtoupper($empresa_nome);
+                    if (!empty($empresa_nome) && $empresa_clean !== 'N/A' && $empresa_clean !== '-' && $empresa_clean !== 'NÃO INFORMADO') {
                         $stmt = $db->prepare("SELECT id FROM companies WHERE corporate_name = ? OR trade_name = ?");
                         $stmt->execute([$empresa_nome, $empresa_nome]);
                         $company = $stmt->fetch();
