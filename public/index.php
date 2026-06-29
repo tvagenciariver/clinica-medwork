@@ -55,6 +55,7 @@ $GLOBALS['appSettings'] = $appSettings;
 try {
     $db->query("ALTER TABLE exams MODIFY file_path TEXT");
     $db->query("ALTER TABLE users ADD COLUMN force_password_change BOOLEAN DEFAULT FALSE");
+    $db->query("ALTER TABLE exams MODIFY status ENUM('registered', 'processing', 'available', 'sent_whatsapp', 'viewed_patient', 'viewed_company', 'cancelled') DEFAULT 'registered'");
     
     // Create specialties table
     $db->query("CREATE TABLE IF NOT EXISTS specialties (

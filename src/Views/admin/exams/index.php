@@ -43,6 +43,17 @@
                         <label class="form-label">Tipo de Exame</label>
                         <input type="text" name="exam_type" class="form-control" value="<?= htmlspecialchars($exam_type ?? '') ?>" placeholder="Ex: Audiometria">
                     </div>
+                    <div class="form-group" style="flex: 1.5; margin: 0; min-width: 200px;">
+                        <label class="form-label">Empresa</label>
+                        <select name="company_id" class="form-control">
+                            <option value="">Todas as Empresas</option>
+                            <?php foreach ($companies ?? [] as $c): ?>
+                                <option value="<?= $c['id'] ?>" <?= (isset($company_id) && $company_id == $c['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($c['trade_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <div style="margin-bottom: 0.25rem;">
                         <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filtrar</button>
                         <?php if(!empty($search) || !empty($date_start) || !empty($date_end) || !empty($exam_type)): ?>
@@ -95,6 +106,8 @@
                                         <span class="badge" style="background: #e0e7ff; color: #3730a3;"><i class="fa-solid fa-eye"></i> Visualizado pela Empresa</span>
                                     <?php elseif($e['status'] === 'viewed_patient'): ?>
                                         <span class="badge" style="background: #e0e7ff; color: #3730a3;"><i class="fa-solid fa-eye"></i> Visualizado pelo Paciente</span>
+                                    <?php elseif($e['status'] === 'cancelled'): ?>
+                                        <span class="badge badge-default" style="background: #fee2e2; color: #991b1b;">Cancelado</span>
                                     <?php else: ?>
                                         <span class="badge badge-info"><?= htmlspecialchars($e['status']) ?></span>
                                     <?php endif; ?>

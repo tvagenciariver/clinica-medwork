@@ -14,7 +14,10 @@ class DashboardController extends Controller {
         $totalExams = $db->query("SELECT COUNT(*) FROM exams")->fetchColumn();
         $totalCompanies = $db->query("SELECT COUNT(*) FROM companies")->fetchColumn();
         $totalPatients = $db->query("SELECT COUNT(*) FROM patients")->fetchColumn();
-        $availableExams = $db->query("SELECT COUNT(*) FROM exams WHERE status = 'available'")->fetchColumn();
+        
+        $availableExams = $db->query("SELECT COUNT(*) FROM exams WHERE status IN ('available', 'sent_whatsapp', 'viewed_patient', 'viewed_company')")->fetchColumn();
+        $pendingExams = $db->query("SELECT COUNT(*) FROM exams WHERE status IN ('registered', 'processing')")->fetchColumn();
+        $cancelledExams = $db->query("SELECT COUNT(*) FROM exams WHERE status = 'cancelled'")->fetchColumn();
         
         // Últimos exames
         $recentExams = $db->query("
@@ -30,6 +33,8 @@ class DashboardController extends Controller {
             'totalCompanies' => $totalCompanies,
             'totalPatients' => $totalPatients,
             'availableExams' => $availableExams,
+            'pendingExams' => $pendingExams,
+            'cancelledExams' => $cancelledExams,
             'recentExams' => $recentExams
         ]);
     }

@@ -16,6 +16,7 @@ class ExamController extends Controller {
         $date_start = $_GET['date_start'] ?? '';
         $date_end = $_GET['date_end'] ?? '';
         $exam_type = trim($_GET['exam_type'] ?? '');
+        $company_id = $_GET['company_id'] ?? '';
         
         $where = [];
         $params = [];
@@ -45,6 +46,11 @@ class ExamController extends Controller {
             $params['exam_type'] = "%{$exam_type}%";
         }
         
+        if (!empty($company_id)) {
+            $where[] = "e.company_id = :company_id";
+            $params['company_id'] = $company_id;
+        }
+        
         $whereSql = count($where) > 0 ? "WHERE " . implode(" AND ", $where) : "";
 
         $stmt = $db->prepare("
@@ -62,13 +68,18 @@ class ExamController extends Controller {
         $msg = $_SESSION['msg'] ?? null;
         unset($_SESSION['msg']);
 
+        // Buscar lista de empresas para o filtro
+        $companies = $db->query("SELECT id, trade_name FROM companies ORDER BY trade_name ASC")->fetchAll();
+
         $this->view('admin/exams/index', [
             'exams' => $exams, 
+            'companies' => $companies,
             'msg' => $msg,
             'search' => $search,
             'date_start' => $date_start,
             'date_end' => $date_end,
-            'exam_type' => $exam_type
+            'exam_type' => $exam_type,
+            'company_id' => $company_id
         ]);
     }
 

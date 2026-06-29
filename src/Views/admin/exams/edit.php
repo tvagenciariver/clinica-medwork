@@ -132,6 +132,7 @@
                             <option value="sent_whatsapp" <?= $exam['status'] === 'sent_whatsapp' ? 'selected' : '' ?>>Notificado no WhatsApp</option>
                             <option value="viewed_company" <?= $exam['status'] === 'viewed_company' ? 'selected' : '' ?>>Visualizado pela Empresa</option>
                             <option value="viewed_patient" <?= $exam['status'] === 'viewed_patient' ? 'selected' : '' ?>>Visualizado pelo Paciente</option>
+                            <option value="cancelled" <?= $exam['status'] === 'cancelled' ? 'selected' : '' ?>>Cancelado</option>
                         </select>
                     </div>
 

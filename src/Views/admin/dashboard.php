@@ -29,22 +29,30 @@
                 <a href="<?= BASE_URL ?>/admin/exams/create" class="btn btn-primary"><i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Novo Exame</a>
             </div>
 
-            <div class="stats-grid">
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
                 <div class="stat-card">
                     <span class="stat-title">Total de Exames</span>
                     <span class="stat-value"><?= $totalExams ?></span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-title">Aguardando Envio/Disponíveis</span>
-                    <span class="stat-value" style="color: var(--warning);"><?= $availableExams ?></span>
+                    <span class="stat-title">Confirmados / Prontos</span>
+                    <span class="stat-value" style="color: #10b981;"><?= $availableExams ?></span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-title">Pacientes Cadastrados</span>
-                    <span class="stat-value"><?= $totalPatients ?></span>
+                    <span class="stat-title">Pendentes / Aguardando</span>
+                    <span class="stat-value" style="color: #f59e0b;"><?= $pendingExams ?></span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-title">Empresas Parceiras</span>
-                    <span class="stat-value"><?= $totalCompanies ?></span>
+                    <span class="stat-title">Cancelados</span>
+                    <span class="stat-value" style="color: #ef4444;"><?= $cancelledExams ?></span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Pacientes</span>
+                    <span class="stat-value" style="color: #3b82f6;"><?= $totalPatients ?></span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Empresas</span>
+                    <span class="stat-value" style="color: #6366f1;"><?= $totalCompanies ?></span>
                 </div>
             </div>
 
