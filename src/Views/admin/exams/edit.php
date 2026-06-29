@@ -178,7 +178,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             // Se for particular, ou se a empresa não foi selecionada, ou se bate com a empresa
-            if (!isCompanyOrigin || !companyId || opt.getAttribute('data-company-id') === companyId) {
+            // OU se é o paciente que já estava selecionado (para não sumir o paciente atual)
+            if (!isCompanyOrigin || !companyId || opt.getAttribute('data-company-id') === companyId || opt.value === currentPatientId || opt.value === currentSelected) {
                 var newOpt = opt.cloneNode(true);
                 // Manter selecionado se estava
                 if (newOpt.value === currentSelected || (currentSelected === '' && newOpt.value === currentPatientId)) {

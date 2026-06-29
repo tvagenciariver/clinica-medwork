@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function filterPatients() {
         var companyId = companySelect.value;
         var isCompanyOrigin = originSelect.value === 'company';
+        var currentSelected = patientSelect.value;
         
         patientSelect.innerHTML = '';
         patientOptions.forEach(function(opt) {
@@ -129,8 +130,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             // Se for particular, ou se a empresa não foi selecionada, ou se bate com a empresa
-            if (!isCompanyOrigin || !companyId || opt.getAttribute('data-company-id') === companyId) {
-                patientSelect.appendChild(opt.cloneNode(true));
+            // OU se o paciente já estava selecionado antes de mudar a empresa
+            if (!isCompanyOrigin || !companyId || opt.getAttribute('data-company-id') === companyId || (currentSelected && opt.value === currentSelected)) {
+                var newOpt = opt.cloneNode(true);
+                if (currentSelected && newOpt.value === currentSelected) {
+                    newOpt.selected = true;
+                }
+                patientSelect.appendChild(newOpt);
             }
         });
     }
