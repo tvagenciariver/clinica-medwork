@@ -47,9 +47,10 @@ class WahaApiService {
         $wahaUrl = $settings['waha_base_url'] ?? 'http://localhost:3000';
         $wahaKey = $settings['waha_api_key'] ?? '';
         $wahaSession = $settings['waha_session'] ?? 'default';
-        $templatePatient = $settings['waha_template_patient'] ?? "Olá, {paciente}. Exames da MedWork disponíveis. Protocolo: {protocolo}.";
-        $templateCompany = $settings['waha_template_company'] ?? "Olá. Exames do colaborador {paciente} disponíveis. Protocolo: {protocolo}.";
+        $templatePatient = $settings['waha_template_patient'] ?? "Olá, {paciente}. Informamos que seus exames da Clínica MedWork já estão disponíveis para consulta. Protocolo: {protocolo}. Acesse: {url} (Login e Senha padrão: seu CPF)";
+        $templateCompany = $settings['waha_template_company'] ?? "Olá. Informamos que os exames do colaborador {paciente}, já estão disponíveis para consulta no portal. Protocolo: {protocolo}. Acesse: {url}";
 
+        $url = "http://megaport3.whatscorporativo.com:9090/";
         $phone = '';
         $messageText = '';
         
@@ -59,8 +60,8 @@ class WahaApiService {
             
             // Substituição no template
             $messageText = str_replace(
-                ['{paciente}', '{protocolo}', '{clinica}'],
-                [$examData['patient_name'], $examData['protocol_code'], 'MedWork'],
+                ['{paciente}', '{protocolo}', '{clinica}', '{url}'],
+                [$examData['patient_name'], $examData['protocol_code'], 'MedWork', $url],
                 $templatePatient
             );
         } elseif ($recipientType === 'company') {
@@ -70,8 +71,8 @@ class WahaApiService {
             
             // Substituição no template
             $messageText = str_replace(
-                ['{paciente}', '{protocolo}', '{clinica}'],
-                [$examData['patient_name'], $examData['protocol_code'], 'MedWork'],
+                ['{paciente}', '{protocolo}', '{clinica}', '{url}'],
+                [$examData['patient_name'], $examData['protocol_code'], 'MedWork', $url],
                 $templateCompany
             );
         }
