@@ -11,8 +11,6 @@ services:
 
   app:
     image: webdevops/php-apache:8.2
-    ports:
-      - "9090:80"
     environment:
       - WEB_DOCUMENT_ROOT=/app/public
       - DB_HOST=db
