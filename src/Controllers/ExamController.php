@@ -22,11 +22,12 @@ class ExamController extends Controller {
         $params = [];
         
         if (!empty($search)) {
-            $where[] = "(p.full_name LIKE :search OR p.cpf LIKE :search)";
+            $where[] = "(p.full_name LIKE :search1 OR p.cpf LIKE :search2)";
             $search_clean = preg_replace('/[^0-9]/', '', $search);
-            $params['search'] = "%{$search}%";
+            $params['search1'] = "%{$search}%";
+            $params['search2'] = "%{$search}%";
             if (!empty($search_clean)) {
-                $where[count($where)-1] = "(p.full_name LIKE :search OR p.cpf LIKE :search OR p.cpf LIKE :search_clean)";
+                $where[count($where)-1] = "(p.full_name LIKE :search1 OR p.cpf LIKE :search2 OR p.cpf LIKE :search_clean)";
                 $params['search_clean'] = "%{$search_clean}%";
             }
         }
