@@ -88,19 +88,16 @@ class PatientController extends Controller {
                 $patient_id = $db->lastInsertId();
 
                 // Cria usuário para o paciente acessar o portal
-                if (!empty($email)) {
-                    $password = password_hash($cpf, PASSWORD_DEFAULT); // Senha padrão = CPF
-                    $stmtUser = $db->prepare("
-                        INSERT INTO users (name, email, password, role, patient_id) 
-                        VALUES (:name, :email, :password, 'patient', :patient_id)
-                    ");
-                    $stmtUser->execute([
-                        'name' => $full_name,
-                        'email' => $email,
-                        'password' => $password,
-                        'patient_id' => $patient_id
-                    ]);
-                }
+                $stmtUser = $db->prepare("
+                    INSERT INTO users (name, email, password, role, patient_id) 
+                    VALUES (:name, :email, :password, 'patient', :patient_id)
+                ");
+                $stmtUser->execute([
+                    'name' => $full_name,
+                    'email' => $cpf,
+                    'password' => password_hash($cpf, PASSWORD_DEFAULT),
+                    'patient_id' => $patient_id
+                ]);
 
                 $this->redirect('/admin/patients');
             } catch (\PDOException $e) {
@@ -147,6 +144,18 @@ class PatientController extends Controller {
                     'has_whatsapp' => $has_whatsapp
                 ]);
                 $patient_id = $db->lastInsertId();
+
+                // Cria usuário para o paciente acessar o portal (Login via Modal)
+                $stmtUser = $db->prepare("
+                    INSERT INTO users (name, email, password, role, patient_id) 
+                    VALUES (:name, :email, :password, 'patient', :patient_id)
+                ");
+                $stmtUser->execute([
+                    'name' => $full_name,
+                    'email' => $cpf,
+                    'password' => password_hash($cpf, PASSWORD_DEFAULT),
+                    'patient_id' => $patient_id
+                ]);
 
                 header('Content-Type: application/json');
                 echo json_encode([
@@ -238,28 +247,25 @@ class PatientController extends Controller {
                     'id' => $id
                 ]);
 
-                // Update portal user if email is updated and user exists
+                // Update portal user
                 $stmtUserCheck = $db->prepare("SELECT id FROM users WHERE patient_id = ?");
                 $stmtUserCheck->execute([$id]);
                 if ($stmtUserCheck->fetch()) {
-                    if (!empty($email)) {
-                        $db->prepare("UPDATE users SET email = :email, name = :name WHERE patient_id = :id")->execute([
-                            'email' => $email,
-                            'name' => $full_name,
-                            'id' => $id
-                        ]);
-                    }
-                } else if (!empty($email)) {
-                    // Create user if didn't exist but now has email
-                    $password = password_hash($cpf, PASSWORD_DEFAULT);
+                    $db->prepare("UPDATE users SET email = :email, name = :name WHERE patient_id = :id")->execute([
+                        'email' => $cpf,
+                        'name' => $full_name,
+                        'id' => $id
+                    ]);
+                } else {
+                    // Create user if didn't exist
                     $stmtUser = $db->prepare("
                         INSERT INTO users (name, email, password, role, patient_id) 
                         VALUES (:name, :email, :password, 'patient', :patient_id)
                     ");
                     $stmtUser->execute([
                         'name' => $full_name,
-                        'email' => $email,
-                        'password' => $password,
+                        'email' => $cpf,
+                        'password' => password_hash($cpf, PASSWORD_DEFAULT),
                         'patient_id' => $id
                     ]);
                 }

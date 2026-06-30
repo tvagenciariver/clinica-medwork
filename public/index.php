@@ -86,10 +86,30 @@ $migrations = [
 foreach ($migrations as $sql) {
     try {
         $db->query($sql);
-    } catch (\Throwable $e) {
-        // ignore errors for duplicate columns etc
+    } catch (\PDOException $e) {
+        // Ignora erros de colunas já existentes, etc
     }
 }
+
+// Correção temporária de usuários de pacientes (Garantir CPF no login)
+try {
+    $db->query("CREATE TABLE IF NOT EXISTS _fix_users_run (id INT)");
+    $check = $db->query("SELECT * FROM _fix_users_run")->fetchAll();
+    if (count($check) === 0) {
+        // 1. Criar usuário para quem não tem
+        $patients = $db->query("SELECT * FROM patients WHERE id NOT IN (SELECT patient_id FROM users WHERE role='patient')")->fetchAll();
+        foreach ($patients as $p) {
+            $stmt = $db->prepare("INSERT INTO users (name, email, password, role, patient_id) VALUES (?, ?, ?, 'patient', ?)");
+            $stmt->execute([$p['full_name'], $p['cpf'], password_hash($p['cpf'], PASSWORD_DEFAULT), $p['id']]);
+        }
+        // 2. Atualizar email (login) e senha para quem tem email diferente do CPF
+        $users = $db->query("SELECT u.id, p.cpf FROM users u JOIN patients p ON u.patient_id = p.id WHERE u.role = 'patient' AND u.email != p.cpf")->fetchAll();
+        foreach ($users as $u) {
+            $db->prepare("UPDATE users SET email = ?, password = ? WHERE id = ?")->execute([$u['cpf'], password_hash($u['cpf'], PASSWORD_DEFAULT), $u['id']]);
+        }
+        $db->query("INSERT INTO _fix_users_run VALUES (1)");
+    }
+} catch (\Exception $e) {}
 
 try {
     $count = $db->query("SELECT COUNT(*) FROM specialties")->fetchColumn();
