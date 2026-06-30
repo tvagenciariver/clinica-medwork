@@ -15,9 +15,10 @@ class PatientController extends Controller {
         $params = [];
         
         if (!empty($search)) {
-            $where = "WHERE p.full_name LIKE :search OR p.cpf LIKE :search";
+            $where = "WHERE p.full_name LIKE :search1 OR p.cpf LIKE :search2";
             $search_clean = preg_replace('/[^0-9]/', '', $search); // try numeric for cpf
-            $params['search'] = "%{$search}%";
+            $params['search1'] = "%{$search}%";
+            $params['search2'] = "%{$search}%";
             if (!empty($search_clean)) {
                 $where .= " OR p.cpf LIKE :search_clean";
                 $params['search_clean'] = "%{$search_clean}%";
