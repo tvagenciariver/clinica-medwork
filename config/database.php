@@ -17,7 +17,11 @@ $defaultBaseUrl = 'http://localhost/cdtlab/public';
 if (getenv('BASE_URL')) {
     $defaultBaseUrl = getenv('BASE_URL');
 } else if (isset($_SERVER['HTTP_HOST'])) {
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $protocol = 'http';
+    if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+        (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')) {
+        $protocol = 'https';
+    }
     $path = dirname($_SERVER['SCRIPT_NAME']);
     $defaultBaseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . ($path === '/' || $path === '\\' ? '' : $path);
 }
