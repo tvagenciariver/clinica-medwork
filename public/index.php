@@ -80,9 +80,7 @@ $migrations = [
     "ALTER TABLE appointments MODIFY procedure_name VARCHAR(150) NULL",
     "ALTER TABLE appointments ADD CONSTRAINT fk_specialty FOREIGN KEY (specialty_id) REFERENCES specialties(id) ON DELETE SET NULL",
     "ALTER TABLE appointments MODIFY appointment_time TIME NULL",
-    "ALTER TABLE appointments ADD COLUMN arrival_order INT NULL",
-    "UPDATE settings SET setting_value = 'Olá, {paciente}. Informamos que seus exames da Clínica MedWork já estão disponíveis para consulta. Protocolo: {protocolo}. Acesse: {url} (Login e Senha padrão: seu CPF)' WHERE setting_key = 'waha_template_patient'",
-    "UPDATE settings SET setting_value = 'Olá. Informamos que os exames do colaborador {paciente}, já estão disponíveis para consulta no portal. Protocolo: {protocolo}. Acesse: {url}' WHERE setting_key = 'waha_template_company'"
+    "ALTER TABLE appointments ADD COLUMN arrival_order INT NULL"
 ];
 
 foreach ($migrations as $sql) {

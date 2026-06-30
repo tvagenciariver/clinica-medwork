@@ -66,7 +66,8 @@
                         Você pode utilizar as seguintes variáveis nas mensagens:<br>
                         <code>{paciente}</code> - Nome do Paciente<br>
                         <code>{protocolo}</code> - Protocolo do Exame<br>
-                        <code>{clinica}</code> - Nome fixo da Clínica
+                        <code>{clinica}</code> - Nome fixo da Clínica<br>
+                        <code>{url}</code> - Link do Portal de Acesso
                     </p>
 
                     <div class="form-group">
